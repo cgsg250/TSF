@@ -1,3 +1,5 @@
+import * as game from './game.js'
+
 let socket = null;
 let currentRoomId = null;
 
@@ -49,9 +51,6 @@ function showGameBoard() {
     if (menu) menu.style.display = 'none';
     if (waitingRoom) waitingRoom.style.display = 'none';
     if (gameBoard) gameBoard.style.display = 'flex';
-    
-    // Initialize boards
-    initBoards();
     
     // Setup ship placement
     initShipPlacement();
@@ -215,11 +214,12 @@ function initSocket() {
         console.error('Socket error:', data);
         alert(data.message);
     });
-}
+} 
 
-// ============================================
+
+// ============================================================
 // INITIALIZATION
-// ============================================
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing Sea Battle...');
 
@@ -237,6 +237,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshRoomsBtn = getElement('refreshRoomsBtn');
     if (refreshRoomsBtn) refreshRoomsBtn.addEventListener('click', refreshRoomsList);
+
+    // Initialize boards with grid and labels (important!)
+    initBoards();
 
     // Start with main menu visible
     showMainMenu();
@@ -274,20 +277,41 @@ function updateBoardLabels() {
 }
 
 // ============================================
-// BOARD DRAWING FUNCTIONS
+// SHIP PLACEMENT - STATE VARIABLES
 // ============================================
 
-// ============================================
-// BOARD DRAWING FUNCTIONS
-// ============================================
+// Board data
+let myBoardData = null;      // 10x10 array: 0=empty, 1=ship, 2=hit, 3=miss
+let enemyBoardData = null;   // 10x10 array for enemy board
+
+// Ship placement state
+let placedShips = [];         // Array of placed ships {id, size, cells, direction}
+let selectedShipSize = null;  // Currently selected ship size for placement
+let isShipAttached = false;   // Whether ship is following cursor
+let currentDirection = 'horizontal'; // 'horizontal' or 'vertical'
+let ghostCells = [];           // Current ghost ship cells
+let isValidPlacement = false;  // Whether current ghost position is valid
+let currentHoverCell = null;   // Current cell under cursor {row, col}
+
+// Remaining ships to place
+let remainingShips = {
+    4: 1,  // One 4-cell ship
+    3: 2,  // Two 3-cell ships
+    2: 3,  // Three 2-cell ships
+    1: 4   // Four 1-cell ships
+};
+
+// Ship ID counter for unique identification
+let nextShipId = 1;
 
 const BOARD_SIZE = 10;
 const CELL_SIZE = 30;
 const COL_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
-// Global board data
-let myBoardData = null;      // Left board - player's ships
-let enemyBoardData = null;   // Right board - enemy's ships (hits/misses only)
+ 
+// ============================================
+// BOARD DRAWING FUNCTIONS
+// ============================================
 
 // Draw coordinate labels for both boards
 function drawCoordinateLabels() {
@@ -474,4 +498,255 @@ function getBoardPosition(canvasId, clientX, clientY) {
         return { row, col };
     }
     return null;
+}
+
+// ============================================================
+// SHIP PLACEMENT FUNCTIONS
+// ============================================================
+
+// Random ship placement
+function randomBoard() {
+    resetBoard();  // Start with empty board
+    // TODO: Implement random placement algorithm
+    console.log('Random placement - TODO');
+}
+
+// Rotate current ship direction
+function rotateBoard() {
+    // TODO: Implement ship rotation
+    console.log('Rotate ship - TODO');
+}
+
+// ============================================
+// SHIP PLACEMENT - INITIALIZATION
+// ============================================
+
+// Initialize ship placement system
+function initShipPlacement() {
+    console.log('Initializing ship placement...');
+    
+    // Reset board data
+    myBoardData = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+    enemyBoardData = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+    
+    // Reset placement state
+    placedShips = [];
+    selectedShipSize = null;
+    isShipAttached = false;
+    currentDirection = 'horizontal';
+    ghostCells = [];
+    isValidPlacement = false;
+    currentHoverCell = null;
+    nextShipId = 1;
+    
+    // Reset remaining ships
+    remainingShips = {
+        4: 1,
+        3: 2,
+        2: 3,
+        1: 4
+    };
+    
+    // Draw empty boards
+    drawCoordinateLabels();
+    drawLeftBoard();
+    drawRightBoard();
+    
+    // Reset ship buttons UI
+    updateShipButtons();
+    
+    // Update ready button state
+    updateReadyButton();
+    
+    // Setup event listeners for mouse movement and clicks
+    setupShipPlacementEvents();
+    
+    console.log('Ship placement initialized');
+}
+
+// Reset entire placement (clear all ships)
+function resetPlacement() {
+    console.log('Resetting ship placement...');
+    
+    // Clear board
+    myBoardData = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+    
+    // Reset placement state
+    placedShips = [];
+    selectedShipSize = null;
+    isShipAttached = false;
+    currentDirection = 'horizontal';
+    ghostCells = [];
+    isValidPlacement = false;
+    currentHoverCell = null;
+    nextShipId = 1;
+    
+    // Reset remaining ships
+    remainingShips = {
+        4: 1,
+        3: 2,
+        2: 3,
+        1: 4
+    };
+    
+    // Redraw board
+    drawLeftBoard();
+    
+    // Reset ship buttons
+    updateShipButtons();
+    
+    // Update ready button
+    updateReadyButton();
+    
+    // Clear any ghost ship
+    clearGhostShip();
+}
+
+// Check if all ships are placed
+function areAllShipsPlaced() {
+    const totalShipsPlaced = placedShips.length;
+    const totalShipsNeeded = 10; // 1+2+3+4 = 10 ships
+    
+    console.log(`Ships placed: ${totalShipsPlaced}/${totalShipsNeeded}`);
+    return totalShipsPlaced === totalShipsNeeded;
+}
+
+// Update READY button state based on ship placement
+function updateReadyButton() {
+    const readyBtn = getElement('readyBtn');
+    const readyIndicator = getElement('readyIndicator');
+    
+    if (!readyBtn) return;
+    
+    if (areAllShipsPlaced()) {
+        readyBtn.disabled = false;
+        readyBtn.style.opacity = '1';
+        readyBtn.style.cursor = 'pointer';
+        if (readyIndicator) {
+            readyIndicator.textContent = '✓ READY TO FIGHT!';
+            readyIndicator.className = 'ready-indicator ready';
+        }
+        console.log('All ships placed! Ready button activated');
+    } else {
+        readyBtn.disabled = true;
+        readyBtn.style.opacity = '0.5';
+        readyBtn.style.cursor = 'not-allowed';
+        if (readyIndicator) {
+            const remaining = 10 - placedShips.length;
+            readyIndicator.textContent = `⚡ PLACE YOUR SHIPS (${remaining} left)`;
+            readyIndicator.className = 'ready-indicator not-ready';
+        }
+    }
+}
+
+// Update ship buttons UI (enable/disable based on remaining ships)
+function updateShipButtons() {
+    // Update all ship buttons with data-size attribute
+    const shipButtons = document.querySelectorAll('.ship-btn');
+    
+    shipButtons.forEach(button => {
+        const size = parseInt(button.getAttribute('data-size'));
+        if (!isNaN(size) && remainingShips[size] === 0) {
+            // No more ships of this size left
+            button.disabled = true;
+            button.classList.add('placed');
+        } else {
+            button.disabled = false;
+            button.classList.remove('placed');
+        }
+    });
+    
+    // Highlight selected ship button
+    const allShipBtns = document.querySelectorAll('.ship-btn');
+    allShipBtns.forEach(btn => {
+        const size = parseInt(btn.getAttribute('data-size'));
+        if (selectedShipSize === size && isShipAttached) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+}
+
+// Get remaining ships object (for external use)
+function getRemainingShips() {
+    return { ...remainingShips };
+}
+
+// Get next available ship size (for auto-selection)
+function getNextUnplacedShip() {
+    const sizes = [4, 3, 2, 1];
+    for (let size of sizes) {
+        if (remainingShips[size] > 0) {
+            return size;
+        }
+    }
+    return null;
+}
+
+// Check if a specific ship size is still available
+function isShipAvailable(size) {
+    return remainingShips[size] > 0;
+}
+
+// ============================================
+// SHIP PLACEMENT - EVENT SETUP
+// ============================================
+
+// Setup mouse event listeners for ship placement
+function setupShipPlacementEvents() {
+    const leftBoard = document.getElementById('leftBoard');
+    if (!leftBoard) return;
+    
+    // Remove old listeners to avoid duplicates
+    leftBoard.removeEventListener('mousemove', onMouseMove);
+    leftBoard.removeEventListener('click', onBoardClick);
+    leftBoard.removeEventListener('contextmenu', onBoardRightClick);
+    
+    // Add new listeners
+    leftBoard.addEventListener('mousemove', onMouseMove);
+    leftBoard.addEventListener('click', onBoardClick);
+    leftBoard.addEventListener('contextmenu', onBoardRightClick);
+    
+    // Also listen for wheel events on the board for rotation
+    leftBoard.addEventListener('wheel', onWheelRotate);
+    
+    console.log('Ship placement events setup');
+}
+
+// Clear ghost ship from board
+function clearGhostShip() {
+    ghostCells = [];
+    isValidPlacement = false;
+    drawLeftBoard(); // Redraw to remove ghost
+}
+
+// ============================================
+// SHIP PLACEMENT - EVENT HANDLERS (STUBS)
+// ============================================
+
+// Mouse move handler for ghost ship
+function onMouseMove(e) {
+    // TODO: Implement
+    console.log('Mouse move - TODO');
+}
+
+// Click handler for placing ship
+function onBoardClick(e) {
+    // TODO: Implement
+    console.log('Board click - TODO');
+}
+
+// Right click handler for removing ship
+function onBoardRightClick(e) {
+    e.preventDefault(); // Prevent browser context menu
+    // TODO: Implement
+    console.log('Right click - TODO');
+}
+
+// Wheel handler for rotating ship
+function onWheelRotate(e) {
+    e.preventDefault(); // Prevent page scrolling
+    // TODO: Implement
+    console.log('Wheel rotate - TODO');
 }

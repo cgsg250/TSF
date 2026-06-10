@@ -682,7 +682,7 @@ input {
 }
 
 /* ============================================
-   BOARD GRID WITH COORDINATE LABELS - FIXED
+   BOARD GRID WITH COORDINATE LABELS
    ============================================ */
 
 /* Board container */
@@ -873,4 +873,43 @@ canvas {
 
 .rotate-btn:hover {
     background: #9b59b6;
+}                       
+
+/* Reset button */
+.random-btn {
+    background: #2980b9;
+    border-color: #3498db;
+}
+
+.random-btn:hover {
+    background: #3498db;
+}
+
+/* Rotation button */
+.reset-btn {
+    background: #c52828;
+    border-color: #d64040;
+}
+
+.reset-btn:hover {
+    background: #d64040;
+}
+
+/* Disable default context menu on canvas */
+canvas {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* Ready button disabled state */
+.ready-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ready-btn:disabled:hover {
+    transform: none;
+    background: #27ae60;
 }
