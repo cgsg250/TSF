@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Морской бой</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Main Title -->
+        <h1 class="game-title">Морской бой</h1>
+
+        <!-- Menu -->
+        <div id="menu" class="menu">
+            <input type="text" id="nickname" placeholder="Your nickname">
+            <button id="createRoomBtn">Create New Room</button>
+            <input type="text" id="roomIdInput" placeholder="Room ID">
+            <button id="joinRoomBtn">Join Room</button>
+            <button id="refreshRoomsBtn">Refresh Rooms</button>
+            <div id="roomsList"></div>
+        </div>
+
+        <!-- Waiting Room -->
+        <div id="waitingRoom" class="menu" style="display: none;">
+            <h2 class="game-title">Морской бой</h2>
+            <p>Room ID: <strong id="roomIdDisplay"></strong></p>
+            <p id="roomStatus"></p>
+            <button id="leaveRoomBtn">Leave Room</button>
+        </div>
+
+
+        <!-- Game Board -->
+        <div id="gameBoard" class="game-board" style="display: none;">
+            <!-- Left Board -->
+            <div class="board-container">
+                <div class="board-header">
+                    <div class="board-label" id="leftBoardLabel">FLEET</div>
+                    <div class="player-name" id="leftPlayerName">Player</div>
+                </div>
+
+                <div class="col-labels" id="leftColLabels"></div>
+
+                <div class="board-wrapper">
+                    <div class="row-labels" id="leftRowLabels"></div>
+                    <canvas id="leftBoard" width="300" height="300"></canvas>
+                </div>
+
+                <!-- Ship placement controls (only for my board) -->
+                <div class="ship-palette" id="shipPalette">
+                    <button class="ship-btn" data-size="4"> 4-cell</button>
+                    <button class="ship-btn" data-size="3"> 3-cell</button>
+                    <button class="ship-btn" data-size="3"> 3-cell</button>
+                    <button class="ship-btn" data-size="2"> 2-cell</button>
+                    <button class="ship-btn" data-size="2"> 2-cell</button>
+                    <button class="ship-btn" data-size="2"> 2-cell</button>
+                    <button class="ship-btn" data-size="1"> 1-cell</button>
+                    <button class="ship-btn" data-size="1"> 1-cell</button>
+                    <button class="ship-btn" data-size="1"> 1-cell</button>
+                    <button class="ship-btn" data-size="1"> 1-cell</button>
+                </div>
+
+                <div>
+                    <button class="ship-btn random-btn" id="randomBtn">🎲 RANDOM</button>
+                    <button class="ship-btn rotate-btn" id="rotateBtn">🔄 ROTATE</button>
+                </div>
+
+                <button class="ready-btn" id="readyBtn">✓ READY TO FIGHT!</button>
+                <div class="ready-indicator not-ready" id="readyIndicator">⚡ PLACE YOUR SHIPS</div>
+            </div>
+
+            <!-- Right Board -->
+            <div class="board-container">
+                <div class="board-header">
+                    <div class="board-label" id="rightBoardLabel">FLEET</div>
+                    <div class="player-name" id="rightPlayerName">Opponent</div>
+                </div>
+
+                <div class="col-labels" id="rightColLabels"></div>
+
+                <div class="board-wrapper">
+                    <div class="row-labels" id="rightRowLabels"></div>
+                    <canvas id="rightBoard" width="300" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/unit/dist/bundle.js"></script>
+</body>
+
+</html>

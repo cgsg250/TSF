@@ -1,0 +1,876 @@
+/* ============================================
+   PIXEL STYLE FOR SEA BATTLE
+   NES Classic Palette
+   ============================================ */
+
+/* Import pixel font */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+/* ============================================
+   GLOBAL SETTINGS
+   ============================================ */
+* {
+    box-sizing: border-box;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: pixelated;
+}
+
+body {
+    position: relative;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Background image for menu */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/assets/menu.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.5;
+    z-index: -2;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* Dark overlay for better readability */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* ============================================
+   CONTAINERS
+   ============================================ */
+#app {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* MENU - единый стиль */
+.menu {
+    text-align: center;
+    background: rgba(44, 62, 110, 0.85);
+    backdrop-filter: blur(2px);
+    padding: 30px;
+    border: 4px solid #7f8c8d;
+    box-shadow: 8px 8px 0 #1a252f;
+    margin-bottom: 30px;
+    border-radius: 0; /* Пиксельные углы */
+}
+
+/* Waiting room same style */
+#waitingRoom.menu {
+    background: rgba(44, 62, 110, 0.85);
+    backdrop-filter: blur(2px);
+}
+
+.menu h1, .menu h2 {
+    color: #ecf0f1;
+    font-size: 24px;
+    margin-bottom: 30px;
+    text-shadow: 4px 4px 0 #1a252f;
+    letter-spacing: 2px;
+}
+
+.menu input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    padding: 10px;
+    margin: 10px;
+    background: #34495e;
+    border: 3px solid #7f8c8d;
+    color: #ecf0f1;
+    text-align: center;
+}
+
+.menu input:focus {
+    outline: none;
+    border-color: #e74c3c;
+}
+
+/* ============================================
+   WAITING ROOM TEXT STYLES
+   ============================================ */
+
+/* Ensure all text in waiting room uses pixel font */
+#waitingRoom,
+#waitingRoom p,
+#waitingRoom strong,
+#waitingRoom span,
+#waitingRoom div {
+    font-family: 'Press Start 2P', 'VT323', monospace;
+}
+
+#waitingRoom p {
+    color: #ecf0f1;
+    font-size: 12px;
+    margin: 15px 0;
+    text-shadow: 2px 2px 0 #1a252f;
+}
+
+#waitingRoom strong {
+    color: #ffcc00;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+
+#roomStatus {
+    color: #95a5a6;
+    font-size: 10px;
+    margin-top: 20px;
+}
+
+/* Fix for any text in waiting room */
+#waitingRoom.menu {
+    text-align: center;
+}
+
+#waitingRoom .game-title {
+    font-size: 24px;
+    margin-bottom: 30px;
+}
+
+/* PIXEL BUTTONS */
+button {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    padding: 12px 20px;
+    margin: 10px;
+    background: #7f8c8d;
+    border: none;
+    color: #2c3e6e;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #1a252f;
+    transition: all 0.05s linear;
+    text-transform: uppercase;
+}
+
+button:hover {
+    background: #95a5a6;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #1a252f;
+}
+
+button:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0 #1a252f;
+}
+
+/* ============================================
+   GAME BOARD
+   ============================================ */
+.game-board {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+/* BOARD CONTAINER */
+.board-container {
+    text-align: center;
+}
+
+.board-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #ecf0f1;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* CANVAS (PIXEL FIELD) */
+canvas {
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: pixelated;
+    border: 4px solid #7f8c8d;
+    box-shadow: 6px 6px 0 #1a252f;
+}
+
+#myBoard {
+    background: #2c3e6e;
+}
+
+#enemyBoard {
+    background: #2c3e6e;
+    transition: all 0.1s steps(2);
+}
+
+#enemyBoard:hover {
+    box-shadow: 8px 8px 0 #1a252f;
+    transform: translate(-2px, -2px);
+}
+
+/* ============================================
+   INFO PANEL
+   ============================================ */
+.info-panel {
+    background: rgba(44, 62, 110, 0.85);
+    backdrop-filter: blur(2px);
+    border: 4px solid #7f8c8d;
+    padding: 15px;
+    margin-top: 30px;
+    text-align: center;
+    color: #ecf0f1;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    box-shadow: 6px 6px 0 #1a252f;
+}
+
+.turn-indicator {
+    padding: 10px;
+    background: #34495e;
+    display: inline-block;
+    margin: 10px;
+}
+
+.turn-indicator.active {
+    background: #e74c3c;
+    color: white;
+    animation: blink 0.8s steps(2) infinite;
+}
+
+.message-log {
+    background: #1a252f;
+    padding: 10px;
+    margin-top: 15px;
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 10px;
+    text-align: left;
+    font-family: 'VT323', monospace;
+    border: 2px solid #7f8c8d;
+}
+
+/* ============================================
+   GAME TITLE
+   ============================================ */
+.game-title {
+    text-align: center;
+    color: #ecf0f1;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 32px;
+    margin: 0 0 30px 0;
+    text-shadow: 4px 4px 0 #1a252f;
+    letter-spacing: 2px;
+}
+
+/* ============================================
+   PIXEL EXPLOSION ANIMATIONS
+   ============================================ */
+.explosion {
+    position: absolute;
+    pointer-events: none;
+    z-index: 100;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+@keyframes pixelExplosion1 {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+        box-shadow: 0 0 0 0px #ff0000, 0 0 0 0px #ff6600;
+    }
+    25% {
+        transform: scale(1.2);
+        opacity: 1;
+        box-shadow: 0 0 0 2px #ff0000, 0 0 0 4px #ff6600, 0 0 0 6px #ffcc00;
+    }
+    50% {
+        transform: scale(1);
+        opacity: 0.8;
+        box-shadow: 0 0 0 4px #ff6600, 0 0 0 8px #ff0000;
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+        box-shadow: 0 0 0 8px #ff0000, 0 0 0 12px #ff6600;
+    }
+}
+
+@keyframes pixelExplosion2 {
+    0% {
+        filter: brightness(1);
+        text-shadow: 0 0 0px #ff0000, 0 0 0px #ff6600;
+    }
+    20% {
+        filter: brightness(2);
+        text-shadow: 2px 2px 0px #ff0000, -2px -2px 0px #ff6600, 3px -1px 0px #ffff00;
+    }
+    40% {
+        filter: brightness(1.5);
+        text-shadow: -2px 2px 0px #ff6600, 2px -2px 0px #ff0000;
+    }
+    100% {
+        filter: brightness(0);
+        text-shadow: 0 0 0px transparent;
+    }
+}
+
+@keyframes pixelShrapnel {
+    0% {
+        transform: rotate(0deg) scale(0.8);
+        letter-spacing: 0px;
+        opacity: 1;
+    }
+    25% {
+        transform: rotate(90deg) scale(1.2);
+        letter-spacing: 4px;
+        text-shadow: 2px 2px 0 #ff0000;
+    }
+    50% {
+        transform: rotate(180deg) scale(1);
+        letter-spacing: 8px;
+        text-shadow: -2px -2px 0 #ff6600;
+    }
+    75% {
+        transform: rotate(270deg) scale(0.6);
+        letter-spacing: 4px;
+        text-shadow: 2px -2px 0 #ffcc00;
+    }
+    100% {
+        transform: rotate(360deg) scale(0);
+        letter-spacing: 0px;
+        opacity: 0;
+        text-shadow: none;
+    }
+}
+
+@keyframes pixelFlash {
+    0%, 100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 0 #ff0000;
+    }
+    10%, 30% {
+        background-color: rgba(255, 0, 0, 0.8);
+        box-shadow: 0 0 0 4px #ff0000, 0 0 0 8px #ff6600;
+    }
+    20%, 40% {
+        background-color: rgba(255, 100, 0, 0.6);
+        box-shadow: 0 0 0 2px #ff6600, 0 0 0 6px #ffcc00;
+    }
+    50% {
+        background-color: rgba(255, 0, 0, 0.3);
+        box-shadow: 0 0 0 8px #ff0000;
+    }
+}
+
+@keyframes pixelMushroom {
+    0% {
+        transform: scaleY(0.2) scaleX(1);
+        opacity: 0;
+    }
+    30% {
+        transform: scaleY(1.2) scaleX(0.8);
+        opacity: 1;
+        box-shadow: 0 -10px 0 #ff0000, 0 -20px 0 #ff6600, 10px -15px 0 #ffcc00, -10px -15px 0 #ffcc00;
+    }
+    60% {
+        transform: scaleY(0.8) scaleX(1.2);
+        opacity: 0.7;
+        box-shadow: 0 -5px 0 #ff6600, 0 -10px 0 #ffcc00, 5px -8px 0 #ffff00, -5px -8px 0 #ffff00;
+    }
+    100% {
+        transform: scaleY(0) scaleX(1.5);
+        opacity: 0;
+        box-shadow: none;
+    }
+}
+
+.explosion-type-1 { animation: pixelExplosion1 0.4s steps(8) forwards; }
+.explosion-type-2 { animation: pixelExplosion2 0.5s steps(10) forwards; }
+.explosion-type-3 { animation: pixelShrapnel 0.6s steps(12) forwards; }
+.explosion-type-4 { animation: pixelFlash 0.4s steps(5) forwards; }
+.explosion-type-5 { animation: pixelMushroom 0.5s steps(10) forwards; }
+
+@keyframes pixelSmoke {
+    0% {
+        transform: translateY(0px) scale(0.8);
+        opacity: 0.6;
+        background: radial-gradient(circle, #666 0%, #444 100%);
+    }
+    50% {
+        transform: translateY(-15px) scale(1.2);
+        opacity: 0.3;
+        background: radial-gradient(circle, #888 0%, #555 100%);
+    }
+    100% {
+        transform: translateY(-30px) scale(1.5);
+        opacity: 0;
+        background: radial-gradient(circle, #aaa 0%, #666 100%);
+    }
+}
+
+.smoke {
+    animation: pixelSmoke 0.8s steps(8) forwards;
+    border-radius: 50%;
+}
+
+@keyframes shipSmoldering {
+    0%, 100% { filter: brightness(1); background-color: #8b5a2b; }
+    25% { filter: brightness(1.3); background-color: #ff6600; box-shadow: inset 0 0 5px #ff0000; }
+    50% { filter: brightness(0.7); background-color: #4a2a0a; }
+    75% { filter: brightness(1.2); background-color: #ff3300; box-shadow: inset 0 0 8px #ff0000; }
+}
+
+.ship-hit {
+    animation: shipSmoldering 0.8s steps(4) infinite;
+    position: relative;
+}
+
+@keyframes sparks {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; background: #ffcc00; }
+    25% { transform: translate(-4px, -8px) scale(0.6); opacity: 0.8; background: #ff6600; }
+    50% { transform: translate(4px, -12px) scale(0.4); opacity: 0.5; background: #ff3300; }
+    75% { transform: translate(-2px, -6px) scale(0.2); opacity: 0.2; background: #ff0000; }
+    100% { transform: translate(0, -4px) scale(0); opacity: 0; }
+}
+
+.spark {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #ffcc00;
+    animation: sparks 0.5s steps(4) forwards;
+    image-rendering: pixelated;
+}
+
+.hit-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,0,0,0.8) 0%, rgba(255,100,0,0.4) 50%, transparent 70%);
+    animation: hitFlash 0.3s steps(6) forwards;
+    z-index: 50;
+}
+
+@keyframes hitFlash {
+    0% { opacity: 0; background: radial-gradient(circle, #ff0000 0%, #ff6600 30%, transparent 60%); }
+    25% { opacity: 1; background: radial-gradient(circle, #ff6600 0%, #ffcc00 40%, transparent 70%); }
+    50% { opacity: 0.6; background: radial-gradient(circle, #ff0000 0%, #ff3300 50%, transparent 80%); }
+    100% { opacity: 0; background: transparent; }
+}
+
+.destroy-mark { position: relative; }
+.destroy-mark::before,
+.destroy-mark::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 3px;
+    background: #ff0000;
+    top: 50%;
+    left: 10%;
+    transform-origin: center;
+    image-rendering: pixelated;
+}
+.destroy-mark::before { transform: rotate(45deg); }
+.destroy-mark::after { transform: rotate(-45deg); }
+
+@keyframes miniBoom {
+    0% { transform: scale(0); background: #ff0000; }
+    25% { transform: scale(1.2); background: #ff6600; box-shadow: 0 0 0 4px #ffcc00; }
+    50% { transform: scale(0.8); background: #ff3300; }
+    100% { transform: scale(0); background: transparent; }
+}
+.mini-boom { animation: miniBoom 0.3s steps(5) forwards; }
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.hit-animation {
+    animation: hitFlash 0.2s steps(2);
+}
+
+/* ============================================
+   MODAL WINDOW (GAME OVER)
+   ============================================ */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #2c3e6e;
+    border: 6px solid #7f8c8d;
+    padding: 30px;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    box-shadow: 12px 12px 0 #1a252f;
+    max-width: 400px;
+}
+
+.modal-content h2 {
+    color: #ecf0f1;
+    margin-bottom: 20px;
+}
+
+.modal-content button {
+    margin-top: 20px;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.hidden {
+    display: none;
+}
+
+.message-log::-webkit-scrollbar {
+    width: 12px;
+    background: #1a252f;
+}
+
+.message-log::-webkit-scrollbar-thumb {
+    background: #7f8c8d;
+    border: 2px solid #2c3e6e;
+}
+
+/* ============================================
+   MOBILE ADAPTATION
+   ============================================ */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .game-board {
+        gap: 20px;
+    }
+    
+    canvas {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .menu h1, .menu h2, .game-title {
+        font-size: 16px;
+    }
+    
+    button, .menu input {
+        font-size: 8px;
+        padding: 8px 12px;
+    }
+    
+    .info-panel {
+        font-size: 8px;
+    }
+    
+    .message-log {
+        font-size: 8px;
+    }
+}
+
+@media (max-width: 600px) {
+    .game-board {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    canvas {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+/* ============================================
+   UNIVERSAL PIXEL FONT
+   ============================================ */
+
+/* Apply pixel font to everything */
+html, body, div, span, p, strong, button, input, label {
+    font-family: 'Press Start 2P', 'VT323', monospace;
+}
+
+/* Specific sizes */
+body, .menu, #waitingRoom, button, input {
+    font-family: 'Press Start 2P', 'VT323', monospace;
+}
+
+/* Button styling */
+button {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+}
+
+/* Input fields */
+input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+}
+
+/* Waiting room text */
+#waitingRoom p {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+}
+
+#waitingRoom strong {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: #ffcc00;
+}
+
+#roomIdDisplay {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+
+#roomStatus {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #95a5a6;
+}
+
+/* Room ID input field */
+#roomIdInput {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* Nickname input */
+#nickname {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* ============================================
+   BOARD GRID WITH COORDINATE LABELS - FIXED
+   ============================================ */
+
+/* Board container */
+.board-container {
+    text-align: center;
+    display: inline-block;
+    position: relative;
+}
+
+/* Wrapper for canvas with coordinate labels */
+.board-wrapper {
+    display: inline-block;
+    position: relative;
+    background: #2c3e6e;
+    border: 4px solid #7f8c8d;
+    box-shadow: 6px 6px 0 #1a252f;
+}
+
+/* Column labels (A-J) above the board */
+.col-labels {
+    display: flex;
+    justify-content: center;
+    margin-left: 10px;  /* Match row labels width exactly */
+    margin-bottom: 4px;
+    gap: 0;
+}
+
+.col-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #ecf0f1;
+    text-align: center;
+    width: 30px;
+    flex-shrink: 0;
+    text-shadow: 1px 1px 0 #1a252f;
+}
+
+/* Row labels (1-10) to the left of the board */
+.row-labels {
+    position: absolute;
+    left: -34px;  /* Increased from -25px for better alignment */
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.row-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #ecf0f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;  /* Increased from 20px */
+    height: 30px;
+    flex-shrink: 0;
+    text-shadow: 1px 1px 0 #1a252f;
+}
+
+/* Canvas styling */
+canvas {
+    display: block;
+    margin: 0;
+    cursor: pointer;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    background: #2c3e6e;
+}
+
+/* Make sure canvases are exactly 300x300 */
+#leftBoard, #rightBoard, #myBoard, #enemyBoard {
+    width: 300px;
+    height: 300px;
+}
+
+/* Hover effect for enemy board */
+#enemyBoard, #rightBoard {
+    transition: all 0.1s steps(2);
+}
+
+#enemyBoard:hover, #rightBoard:hover {
+    box-shadow: 8px 8px 0 #1a252f;
+    transform: translate(-2px, -2px);
+}
+
+/* Hover effect for my board */
+#myBoard:hover, #leftBoard:hover {
+    cursor: crosshair;
+}
+
+/* Grid lines style (drawn on canvas) */
+.grid-line {
+    stroke: #7f8c8d;
+    stroke-width: 1;
+}
+
+/* Placement guide for ships */
+.placement-guide {
+    position: absolute;
+    border: 2px solid #ffcc00;
+    background: rgba(255, 204, 0, 0.3);
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Ship placement buttons */
+.ship-palette {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.ship-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 8px 12px;
+    background: #34495e;
+    border: 2px solid #7f8c8d;
+    color: #ecf0f1;
+    cursor: pointer;
+    transition: all 0.05s linear;
+}
+
+.ship-btn:hover {
+    background: #7f8c8d;
+    transform: translate(-2px, -2px);
+}
+
+.ship-btn.selected {
+    background: #e74c3c;
+    border-color: #ffcc00;
+    color: white;
+}
+
+.ship-btn.placed {
+    opacity: 0.5;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.ship-btn.placed:hover {
+    transform: none;
+}
+
+/* Ready button */
+.ready-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    padding: 12px 24px;
+    background: #27ae60;
+    border: 3px solid #2ecc71;
+    color: white;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.1s linear;
+}
+
+.ready-btn:hover {
+    background: #2ecc71;
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 #1a252f;
+}
+
+.ready-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+/* Random ships button */
+.random-btn {
+    background: #2980b9;
+    border-color: #3498db;
+}
+
+.random-btn:hover {
+    background: #3498db;
+}
+
+/* Rotation button */
+.rotate-btn {
+    background: #8e44ad;
+    border-color: #9b59b6;
+}
+
+.rotate-btn:hover {
+    background: #9b59b6;
+}
