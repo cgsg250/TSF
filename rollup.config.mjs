@@ -3,11 +3,11 @@ import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 
 export default {
-  input: 'user/src/user.js', 
+  input: 'user/src/main.js', 
   
   output: {
     file: 'user/dist/bundle.js', 
-    format: 'iife', 
+    format: 'iife',    
     sourcemap: true 
   },
   plugins: [
