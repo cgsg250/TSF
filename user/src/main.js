@@ -5,6 +5,7 @@
 import { getElement } from './utils.js';
 import { showMainMenu } from './ui.js';
 import { initSocket, createRoom, joinRoom, leaveRoom, refreshRoomsList } from './network.js';
+import { randomBoard, resetPlacement, rotateBoard } from './ships.js';
 
 // ============================================================
 // INITIALIZATION
@@ -15,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize socket connection
     initSocket();
 
-    // Setup event listeners for buttons
+    // Setup event listeners for room buttons
     const createRoomBtn = getElement('createRoomBtn');
     if (createRoomBtn) createRoomBtn.addEventListener('click', createRoom);
 
@@ -27,6 +28,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshRoomsBtn = getElement('refreshRoomsBtn');
     if (refreshRoomsBtn) refreshRoomsBtn.addEventListener('click', refreshRoomsList);
+
+    // ============================================
+    // ACTION BUTTONS (RANDOM, RESET, ROTATE)
+    // ============================================
+    
+    // RANDOM button
+    const randomBtn = getElement('randomBtn');
+    if (randomBtn) {
+        randomBtn.addEventListener('click', () => {
+            console.log('Random button clicked');
+            randomBoard();
+        });
+    }
+    
+    // RESET button
+    const resetBtn = getElement('resetBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            console.log('Reset button clicked');
+            resetPlacement();
+        });
+    }
+    
+    // ROTATE button
+    const rotateBtn = getElement('rotateBtn');
+    if (rotateBtn) {
+        rotateBtn.addEventListener('click', () => {
+            console.log('Rotate button clicked');
+            rotateBoard();
+        });
+    }
 
     // Start with main menu visible
     showMainMenu();

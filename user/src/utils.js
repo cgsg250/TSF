@@ -1,5 +1,3 @@
-// getElement, formatCoordinate, parseCoordinate, generateRoomId (если нужна)
-
 // Get element by ID
 export function getElement(id) {
     const element = document.getElementById(id);

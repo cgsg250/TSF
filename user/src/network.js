@@ -1,7 +1,3 @@
-// socket variable
-// initSocket, socket.on(..)
-// createRoom, joinRoom, leaveRoom, refreshRoomsList
-
 import { getElement } from './utils.js';
 import { showWaitingRoom, showMainMenu, showGameBoard, updatePlayerNames, updateBoardLabels } from './ui.js';
 
