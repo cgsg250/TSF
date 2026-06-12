@@ -1,3 +1,7 @@
+// =============================================================
+// SHIP PLACEMENT MODULE
+// =============================================================
+
 import { BOARD_SIZE, CELL_SIZE, drawLeftBoard, drawRightBoard, drawCoordinateLabels, setBoardData, drawGrid }  from './board.js';
 import { updateShipButtons, updateReadyButton } from './ui.js';
 import { getElement } from './utils.js';
@@ -27,7 +31,7 @@ let nextShipId = 1;
 // HELPER FUNCTIONS
 // ============================================
 
-function getBoardPosition(canvasId, clientX, clientY) {
+export function getBoardPosition(canvasId, clientX, clientY) {
     const canvas = document.getElementById(canvasId);
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -452,6 +456,19 @@ export function setupShipPlacementEvents() {
     leftBoard.addEventListener('click', onBoardClick);
     leftBoard.addEventListener('contextmenu', onBoardRightClick);
     leftBoard.addEventListener('wheel', onWheelRotate);
+}
+
+// Remove all ship placement events (for battle mode)
+export function removeShipPlacementEvents() {
+    const leftBoard = document.getElementById('leftBoard');
+    if (!leftBoard) return;
+    
+    leftBoard.removeEventListener('mousemove', onMouseMove);
+    leftBoard.removeEventListener('click', onBoardClick);
+    leftBoard.removeEventListener('contextmenu', onBoardRightClick);
+    leftBoard.removeEventListener('wheel', onWheelRotate);
+    
+    console.log('Ship placement events removed');
 }
 
 // ============================================

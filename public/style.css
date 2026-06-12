@@ -913,3 +913,14 @@ canvas {
     transform: none;
     background: #27ae60;
 }
+
+.giveup-btn {
+    display: none;
+    background: #c52828;
+    border-color: #d64040;
+    margin-top: 20px;
+}
+
+.giveup-btn:hover {
+    background: #d64040;
+}

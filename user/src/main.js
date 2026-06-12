@@ -3,9 +3,10 @@
 // ============================================
 
 import { getElement } from './utils.js';
-import { showMainMenu } from './ui.js';
+import { showMainMenu, onReadyButtonClick } from './ui.js';
 import { initSocket, createRoom, joinRoom, leaveRoom, refreshRoomsList } from './network.js';
-import { randomBoard, resetPlacement, rotateBoard } from './ships.js';
+import { randomBoard, resetPlacement, rotateBoard, getBoardPosition } from './ships.js';
+import { makeMove } from './game_logic.js';
 
 // ============================================================
 // INITIALIZATION
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     // ACTION BUTTONS (RANDOM, RESET, ROTATE)
     // ============================================
-    
+
     // RANDOM button
     const randomBtn = getElement('randomBtn');
     if (randomBtn) {
@@ -41,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             randomBoard();
         });
     }
-    
+
     // RESET button
     const resetBtn = getElement('resetBtn');
     if (resetBtn) {
@@ -50,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resetPlacement();
         });
     }
-    
+
     // ROTATE button
     const rotateBtn = getElement('rotateBtn');
     if (rotateBtn) {
@@ -60,9 +61,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // READY button
+    const readyBtn = getElement('readyBtn');
+    if (readyBtn) {
+        readyBtn.addEventListener('click', onReadyButtonClick);
+    }
+
+    const enemyBoard = document.getElementById('rightBoard');
+    if (enemyBoard) {
+        enemyBoard.addEventListener('click', (e) => {
+            const pos = getBoardPosition('rightBoard', e.clientX, e.clientY);
+            if (pos) {
+                console.log(`Player shoots at row: ${pos.row}, col: ${pos.col}`);
+                const result = makeMove(pos.row, pos.col);
+                console.log('Move result:', result);
+            }
+        });
+    }
+
     // Start with main menu visible
     showMainMenu();
 
     // Refresh rooms list every 5 seconds
     setInterval(refreshRoomsList, 5000);
 });
+

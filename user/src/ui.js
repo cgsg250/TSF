@@ -1,5 +1,11 @@
+// =============================================================
+// UI MODULE
+// =============================================================
+
 import { getElement } from './utils.js';
-import { initShipPlacement } from './ships.js'
+import { sendPlayerReady } from './network.js';
+import { initShipPlacement, placedShips, removeShipPlacementEvents } from './ships.js';
+import { startBattle } from './game_logic.js';
 
 // ============================================
 // SCREEN NAVIGATION
@@ -41,6 +47,71 @@ export function showGameBoard() {
     if (gameBoard) gameBoard.style.display = 'flex';
 
      initShipPlacement();
+}
+
+// Hide ALL ship placement UI
+export function hideShipPlacementUI() {
+    // Hide ship buttons palette
+    const shipPalette = getElement('shipPalette');
+    if (shipPalette) shipPalette.style.display = 'none';
+    
+    // Hide action buttons
+    const randBtn = getElement('randomBtn');
+    const rotateBtn = getElement('rotateBtn');
+    const resetBtn = getElement('resetBtn');
+    const readyBtn = getElement('readyBtn');
+    const readyIndicator = getElement('readyIndicator');
+
+    if (randBtn) randBtn.style.display = 'none';
+    if (rotateBtn) rotateBtn.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (readyBtn) readyBtn.style.display = 'none';
+    if (readyIndicator) readyIndicator.style.display = 'none';
+}
+
+// Show battle UI
+export function showBattleUI() {
+    // Show give up button
+    const giveupBtn = getElement('giveupBtn');
+    if (giveupBtn) {
+        giveupBtn.style.display = 'block';
+    }
+    
+    // Show turn indicator
+    const turnIndicator = getElement('turnIndicator');
+    if (turnIndicator) {
+        turnIndicator.style.display = 'block';
+    }
+}
+
+// Show ship placement UI (for reset or rematch)
+export function showShipPlacementUI() {
+    const shipPalette = getElement('shipPalette');
+    if (shipPalette) shipPalette.style.display = 'flex';
+    
+    const randBtn = getElement('randomBtn');
+    const rotateBtn = getElement('rotateBtn');
+    const resetBtn = getElement('resetBtn');
+    const readyBtn = getElement('readyBtn');
+    const readyIndicator = getElement('readyIndicator');
+
+    if (randBtn) randBtn.style.display = 'inline-block';
+    if (rotateBtn) rotateBtn.style.display = 'inline-block';
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    if (readyBtn) readyBtn.style.display = 'inline-block';
+    if (readyIndicator) readyIndicator.style.display = 'block';
+    
+    // Hide give up button
+    const giveupBtn = getElement('giveupBtn');
+    if (giveupBtn) giveupBtn.style.display = 'none';
+}
+
+export function updateTurnDisplayWaiting() {
+    const turnIndicator = getElement('turnIndicator');
+    if (!turnIndicator) return;
+    
+    turnIndicator.textContent = '⏳ WAITING FOR SERVER...';
+    turnIndicator.style.background = '#95a5a6';
 }
 
 // ============================================
@@ -116,6 +187,7 @@ function handleShipButtonClick(e) {
     });
 }
 
+// Update ready button (without auto-hiding)
 export function updateReadyButton(placedShipsCount) {
     const readyBtn = getElement('readyBtn');
     const readyIndicator = getElement('readyIndicator');
@@ -130,6 +202,7 @@ export function updateReadyButton(placedShipsCount) {
             readyIndicator.textContent = '✓ READY TO FIGHT!';
             readyIndicator.className = 'ready-indicator ready';
         }
+
     } else {
         readyBtn.disabled = true;
         readyBtn.style.opacity = '0.5';
@@ -140,4 +213,33 @@ export function updateReadyButton(placedShipsCount) {
             readyIndicator.className = 'ready-indicator not-ready';
         }
     }
+}
+
+export function onReadyButtonClick() {
+    if (placedShips.length === 10) {
+        sendPlayerReady();  
+        const readyBtn = getElement('readyBtn');
+        if (readyBtn) {
+            readyBtn.disabled = true;
+            readyBtn.textContent = '✓ WAITING FOR OPPONENT...';
+        }
+    } else {
+        alert('Place all ships first!');
+    }
+}
+
+
+// ui.js - switchToBattleMode
+export function switchToBattleMode() {
+    removeShipPlacementEvents();
+    hideShipPlacementUI();
+    showBattleUI();
+    
+    
+    const enemyBoard = document.getElementById('rightBoard');
+    if (enemyBoard) {
+        enemyBoard.style.cursor = 'crosshair';
+    }
+    
+    console.log('Switched to battle mode - waiting for turn from server');
 }

@@ -1,14 +1,48 @@
+// =============================================================
+// USER MODULE
+// =============================================================
+
 import { getElement } from './utils.js';
-import { showWaitingRoom, showMainMenu, showGameBoard, updatePlayerNames, updateBoardLabels } from './ui.js';
+import { showWaitingRoom, showMainMenu, showGameBoard, updatePlayerNames, updateBoardLabels, switchToBattleMode } from './ui.js';
+import { updateAfterMove, setMyTurn, setMySocketId } from './game_logic.js';
 
 export let socket = null;
 export let currentRoomId = null;
+
+// Send move to server
+export function sendMoveToServer(row, col) {
+    if (!socket || !currentRoomId) {
+        console.error('Cannot send move: not connected');
+        return false;
+    }
+
+    socket.emit('makeMove', {
+        roomId: currentRoomId,
+        row: row,
+        col: col
+    });
+
+    return true;
+}
+
+// Send player ready signal to server
+export function sendPlayerReady() {
+    if (!socket || !currentRoomId) {
+        console.error('Cannot send ready: not connected');
+        return false;
+    }
+
+    socket.emit('playerReady');
+    console.log('Player ready signal sent');
+    return true;
+}
 
 export function initSocket() {
     socket = io();
 
     socket.on('connect', () => {
         console.log('Connected to server');
+        setMySocketId(socket.id);
     });
 
     socket.on('createRoom', (response) => {
@@ -52,6 +86,34 @@ export function initSocket() {
             }
         }
 
+        // network.js - обработчик startBattle
+        socket.on('startBattle', (data) => {
+            console.log('🔥 START BATTLE RECEIVED! 🔥');
+            console.log('Full data:', data);
+
+            let currentTurn = data.currentTurn;
+
+            // Временный фикс: если currentTurn undefined, назначаем текущего игрока
+            if (!currentTurn) {
+                console.warn('currentTurn is undefined! Setting current player as first turn');
+                currentTurn = socket.id;
+            }
+
+            console.log('Current turn socket ID:', currentTurn);
+            console.log('My socket ID:', socket.id);
+            console.log('Is my turn?', currentTurn === socket.id);
+
+            // Pass currentTurn to startBattle function
+            if (typeof startBattle === 'function') {
+                startBattle(currentTurn);
+            }
+
+            // Also set turn directly
+            setMyTurn(currentTurn === socket.id);
+
+            // Switch to battle UI
+            switchToBattleMode();
+        });
         // Update board names
         updatePlayerNames(myNickname, opponentNickname);
         updateBoardLabels();
@@ -73,6 +135,31 @@ export function initSocket() {
     socket.on('error', (data) => {
         console.error('Socket error:', data);
         alert(data.message);
+    });
+
+    socket.on('moveResult', (data) => {
+        console.log('Move result received:', data);
+
+        // Update game state
+        updateAfterMove({
+            playerId: data.playerId,
+            row: data.row,
+            col: data.col,
+            hit: data.hit,
+            currentTurn: data.currentTurn,
+            gameOver: data.gameOver,
+            winner: data.winner
+        });
+
+        // Update turn display
+        setMyTurn(data.currentTurn === socket.id);
+    });
+
+    // Handle start battle
+    socket.on('startBattle', (data) => {
+        console.log('Start battle!', data);
+        switchToBattleMode();
+        setMyTurn(data.currentTurn === socket.id);
     });
 }
 
@@ -168,3 +255,5 @@ export function refreshRoomsList() {
         });
     });
 }
+
+

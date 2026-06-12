@@ -1,4 +1,7 @@
-// Use require for all (no import)
+// =============================================================
+// SERVER MODULE - COMPLETE BATTLE SHIP SERVER
+// =============================================================
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -34,17 +37,24 @@ app.get("/", (req, res) => {
 // ROOMS AND PLAYERS
 // ============================================
 
-const rooms = new Map(); // roomId -> { players: [], gameState: {...} }
-const players = new Map(); // socketId -> { nickname, roomId }
+const rooms = new Map(); // roomId -> room object
+const players = new Map(); // socketId -> player object
 
 // Create new room
 function createRoom(roomId, hostSocketId) {
     const room = {
         id: roomId,
         players: [hostSocketId],
-        status: 'waiting',
+        status: 'waiting', // waiting, ready, playing, finished
+        readyStatus: {},
         currentTurn: null,
-        gameState: null,
+        gameState: {
+            board1: Array(10).fill().map(() => Array(10).fill(0)), // Player 1 ships
+            board2: Array(10).fill().map(() => Array(10).fill(0)), // Player 2 ships
+            hits1: 0,  // Player 1 hits on enemy
+            hits2: 0,  // Player 2 hits on enemy
+            totalShipCells: 20  // 4+3+3+2+2+2+1+1+1+1 = 20
+        },
         createdAt: Date.now()
     };
     rooms.set(roomId, room);
@@ -58,6 +68,13 @@ function joinRoom(roomId, socketId) {
         room.players.push(socketId);
         if (room.players.length === 2) {
             room.status = 'ready';
+            // Инициализируем readyStatus для обоих игроков
+            room.readyStatus = {
+                [room.players[0]]: false,
+                [room.players[1]]: false
+            };
+            console.log(`Room ${roomId} is now ready. Players:`, room.players);
+            console.log(`ReadyStatus initialized:`, room.readyStatus);
         }
         return true;
     }
@@ -76,11 +93,90 @@ function leaveRoom(socketId) {
             rooms.delete(player.roomId);
         } else {
             room.status = 'waiting';
+            room.currentTurn = null;
             // Notify remaining player
             io.to(room.players[0]).emit('opponentLeft', { message: 'Opponent left the game' });
         }
     }
     players.delete(socketId);
+}
+
+// Process move and update game state
+function processMove(room, player, row, col) {
+    const playerIndex = room.players.indexOf(player.socketId);
+    const opponentIndex = playerIndex === 0 ? 1 : 0;
+
+    // Get opponent's board
+    const opponentBoard = playerIndex === 0 ? room.gameState.board2 : room.gameState.board1;
+
+    // Check if already shot
+    if (opponentBoard[row][col] === 2 || opponentBoard[row][col] === 3) {
+        return { hit: false, error: 'Already shot there' };
+    }
+
+    let hit = false;
+    let shipDestroyed = false;
+
+    // Check for hit
+    if (opponentBoard[row][col] === 1) {
+        opponentBoard[row][col] = 2;
+        hit = true;
+
+        // Update hit counter
+        if (playerIndex === 0) {
+            room.gameState.hits1++;
+        } else {
+            room.gameState.hits2++;
+        }
+
+        // Check if ship is destroyed (simplified - all connected cells)
+        shipDestroyed = checkShipDestroyed(opponentBoard, row, col);
+    } else {
+        opponentBoard[row][col] = 3;
+        hit = false;
+    }
+
+    return { hit, shipDestroyed, error: null };
+}
+
+// Check if ship is completely destroyed
+function checkShipDestroyed(board, hitRow, hitCol) {
+    // Find all connected ship cells
+    const shipCells = [];
+    const queue = [{ row: hitRow, col: hitCol }];
+    const visited = new Set();
+
+    while (queue.length > 0) {
+        const { row, col } = queue.shift();
+        const key = `${row},${col}`;
+
+        if (visited.has(key)) continue;
+        if (row < 0 || row >= 10 || col < 0 || col >= 10) continue;
+        if (board[row][col] !== 1 && board[row][col] !== 2) continue;
+
+        visited.add(key);
+        shipCells.push({ row, col });
+
+        // Check neighbors
+        queue.push({ row: row - 1, col }); // up
+        queue.push({ row: row + 1, col }); // down
+        queue.push({ row, col: col - 1 }); // left
+        queue.push({ row, col: col + 1 }); // right
+    }
+
+    // Check if all ship cells are hit (value === 2)
+    return shipCells.every(cell => board[cell.row][cell.col] === 2);
+}
+
+// Check if game is over
+function checkGameOver(room) {
+    if (room.gameState.hits1 >= room.gameState.totalShipCells) {
+        return { gameOver: true, winner: room.players[0] };
+    }
+    if (room.gameState.hits2 >= room.gameState.totalShipCells) {
+        return { gameOver: true, winner: room.players[1] };
+    }
+    return { gameOver: false, winner: null };
 }
 
 // ============================================
@@ -188,6 +284,133 @@ io.on('connection', (socket) => {
     });
 
     // ========================================
+    // PLAYER READY (after placing ships)
+    // ========================================
+
+    // server.js - полностью перепиши обработчик playerReady
+    socket.on('playerReady', () => {
+        const player = players.get(socket.id);
+        if (!player || !player.roomId) return;
+
+        const room = rooms.get(player.roomId);
+        if (!room) return;
+
+        room.readyStatus[socket.id] = true;
+        console.log(`Player ${socket.id} is ready. Status:`, room.readyStatus);
+        console.log(`Room players:`, room.players);
+        console.log(`Ready status:`, room.readyStatus);
+
+        const allReady = room.players.length === 2 &&
+            room.players.every(id => room.readyStatus[id] === true);
+
+        if (allReady) {
+            room.status = 'playing';
+            room.currentTurn = room.players[0]; // Player 1 starts
+
+            console.log(`Room ${player.roomId} - both players ready! Battle starts!`);
+            console.log(`Current turn set to: ${room.currentTurn}`);
+            console.log(`Sending to players: ${room.players[0]} and ${room.players[1]}`);
+
+            // Send to BOTH players with currentTurn
+            io.to(player.roomId).emit('startBattle', {
+                currentTurn: room.currentTurn,
+                message: 'Both players are ready! Battle begins!'
+            });
+        }
+    });
+    // ========================================
+    // MAKE MOVE
+    // ========================================
+    socket.on('makeMove', (data, callback) => {
+        const { roomId, row, col } = data;
+        const room = rooms.get(roomId);
+        const player = players.get(socket.id);
+
+        if (!room || !player) {
+            if (callback) callback({ success: false, error: 'Room or player not found' });
+            return;
+        }
+
+        // Check if game is playing
+        if (room.status !== 'playing') {
+            if (callback) callback({ success: false, error: 'Game not in progress' });
+            return;
+        }
+
+        // Check if it's this player's turn
+        if (room.currentTurn !== socket.id) {
+            if (callback) callback({ success: false, error: 'Not your turn!' });
+            return;
+        }
+
+        // Process the move
+        const moveResult = processMove(room, player, row, col);
+
+        if (moveResult.error) {
+            if (callback) callback({ success: false, error: moveResult.error });
+            return;
+        }
+
+        // Check for game over
+        const gameOverResult = checkGameOver(room);
+        const opponentId = room.players.find(id => id !== socket.id);
+
+        // Switch turn (if miss and game not over)
+        let newTurn = room.currentTurn;
+        if (!moveResult.hit && !gameOverResult.gameOver) {
+            newTurn = opponentId;
+        }
+        room.currentTurn = newTurn;
+
+        // Prepare result for clients
+        const result = {
+            success: true,
+            playerId: socket.id,
+            row: row,
+            col: col,
+            hit: moveResult.hit,
+            shipDestroyed: moveResult.shipDestroyed,
+            currentTurn: room.currentTurn,
+            gameOver: gameOverResult.gameOver,
+            winner: gameOverResult.winner
+        };
+
+        // Send result to both players
+        io.to(roomId).emit('moveResult', result);
+
+        console.log(`Move in room ${roomId}: Player ${socket.id} ${moveResult.hit ? 'HIT' : 'MISS'} at (${row},${col})`);
+
+        if (gameOverResult.gameOver) {
+            room.status = 'finished';
+            console.log(`Game over in room ${roomId}! Winner: ${gameOverResult.winner}`);
+        }
+
+        if (callback) callback({ success: true });
+    });
+
+    // ========================================
+    // UPDATE SHIPS (send ship placement to opponent)
+    // ========================================
+    socket.on('updateShips', (data) => {
+        const player = players.get(socket.id);
+        if (!player || !player.roomId) return;
+
+        const room = rooms.get(player.roomId);
+        if (!room) return;
+
+        const playerIndex = room.players.indexOf(socket.id);
+
+        // Store ships on server
+        if (playerIndex === 0) {
+            room.gameState.board1 = data.boardData;
+        } else {
+            room.gameState.board2 = data.boardData;
+        }
+
+        console.log(`Player ${socket.id} sent ship placement data`);
+    });
+
+    // ========================================
     // GET LIST OF AVAILABLE ROOMS
     // ========================================
     socket.on('getRooms', (callback) => {
@@ -228,50 +451,33 @@ io.on('connection', (socket) => {
     });
 
     // ========================================
-    // START GAME (after ship placement)
-    // ========================================
-    socket.on('startGame', (data) => {
-        const player = players.get(socket.id);
-        if (!player || !player.roomId) return;
-
-        const room = getRoom(player.roomId);
-        if (room && room.status === 'ready') {
-            room.status = 'playing';
-            room.currentTurn = room.players[0];
-
-            io.to(player.roomId).emit('gameStarted', {
-                currentTurn: room.currentTurn,
-                message: 'Game started! Place your ships.'
-            });
-        }
-    });
-
-    // ========================================
     // DISCONNECT
     // ========================================
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
-        
+
         const player = players.get(socket.id);
         if (player && player.roomId) {
             const room = rooms.get(player.roomId);
             if (room) {
                 room.players = room.players.filter(id => id !== socket.id);
-                
+
                 if (room.players.length === 0) {
                     rooms.delete(player.roomId);
                     console.log(`Room ${player.roomId} deleted (empty)`);
                 } else if (room.players.length === 1) {
                     // Notify remaining player
-                    io.to(room.players[0]).emit('opponentLeft', { 
-                        message: 'Opponent disconnected' 
+                    io.to(room.players[0]).emit('opponentLeft', {
+                        message: 'Opponent disconnected'
                     });
                     room.status = 'waiting';
+                    room.currentTurn = null;
+                    room.readyStatus = {};
                     console.log(`Room ${player.roomId} back to waiting (1 player left)`);
                 }
             }
         }
-        
+
         players.delete(socket.id);
         console.log(`Active players: ${players.size}`);
     });
@@ -279,5 +485,12 @@ io.on('connection', (socket) => {
 
 // Start server
 server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`
+    ╔════════════════════════════════════════╗
+    ║     SEA BATTLE SERVER STARTED          ║
+    ╠════════════════════════════════════════╣
+    ║  Port: ${port}                            ║
+    ║  URL:  http://localhost:${port}          ║
+    ╚════════════════════════════════════════╝
+    `);
 });

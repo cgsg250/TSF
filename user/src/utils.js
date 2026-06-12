@@ -1,3 +1,7 @@
+// =============================================================
+// UTILIT MODULE
+// =============================================================
+
 // Get element by ID
 export function getElement(id) {
     const element = document.getElementById(id);
