@@ -5,7 +5,7 @@
 import { getElement } from './utils.js';
 import { sendPlayerReady } from './network.js';
 import { initShipPlacement, placedShips, removeShipPlacementEvents } from './ships.js';
-import { startBattle } from './game_logic.js';
+import { sendMyShipsToServer } from './ships.js';
 
 // ============================================
 // SCREEN NAVIGATION
@@ -46,16 +46,13 @@ export function showGameBoard() {
     if (waitingRoom) waitingRoom.style.display = 'none';
     if (gameBoard) gameBoard.style.display = 'flex';
 
-     initShipPlacement();
+    initShipPlacement();
 }
 
-// Hide ALL ship placement UI
 export function hideShipPlacementUI() {
-    // Hide ship buttons palette
     const shipPalette = getElement('shipPalette');
     if (shipPalette) shipPalette.style.display = 'none';
     
-    // Hide action buttons
     const randBtn = getElement('randomBtn');
     const rotateBtn = getElement('rotateBtn');
     const resetBtn = getElement('resetBtn');
@@ -69,22 +66,18 @@ export function hideShipPlacementUI() {
     if (readyIndicator) readyIndicator.style.display = 'none';
 }
 
-// Show battle UI
 export function showBattleUI() {
-    // Show give up button
     const giveupBtn = getElement('giveupBtn');
     if (giveupBtn) {
         giveupBtn.style.display = 'block';
     }
     
-    // Show turn indicator
     const turnIndicator = getElement('turnIndicator');
     if (turnIndicator) {
         turnIndicator.style.display = 'block';
     }
 }
 
-// Show ship placement UI (for reset or rematch)
 export function showShipPlacementUI() {
     const shipPalette = getElement('shipPalette');
     if (shipPalette) shipPalette.style.display = 'flex';
@@ -101,7 +94,6 @@ export function showShipPlacementUI() {
     if (readyBtn) readyBtn.style.display = 'inline-block';
     if (readyIndicator) readyIndicator.style.display = 'block';
     
-    // Hide give up button
     const giveupBtn = getElement('giveupBtn');
     if (giveupBtn) giveupBtn.style.display = 'none';
 }
@@ -135,11 +127,10 @@ export function updatePlayerNames(myNickname, opponentNickname) {
 }
 
 // ============================================
-// SHIP BUTTONS (receives data as parameters)
+// SHIP BUTTONS
 // ============================================
 
 export function updateShipButtons(remainingShips, selectedShipSize, isShipAttached) {
-    // Safety check
     if (!remainingShips) {
         console.warn('updateShipButtons: remainingShips is undefined');
         return;
@@ -162,7 +153,6 @@ export function updateShipButtons(remainingShips, selectedShipSize, isShipAttach
         button.addEventListener('click', handleShipButtonClick);
     });
     
-    // Highlight selected ship button
     const allShipBtns = document.querySelectorAll('.ship-btn');
     allShipBtns.forEach(btn => {
         const size = parseInt(btn.getAttribute('data-size'));
@@ -187,26 +177,29 @@ function handleShipButtonClick(e) {
     });
 }
 
-// Update ready button (without auto-hiding)
 export function updateReadyButton(placedShipsCount) {
     const readyBtn = getElement('readyBtn');
     const readyIndicator = getElement('readyIndicator');
     
     if (!readyBtn) return;
     
+    readyBtn.removeEventListener('click', onReadyButtonClick);
+    
     if (placedShipsCount === 10) {
         readyBtn.disabled = false;
         readyBtn.style.opacity = '1';
         readyBtn.style.cursor = 'pointer';
+        readyBtn.addEventListener('click', onReadyButtonClick);
+        
         if (readyIndicator) {
             readyIndicator.textContent = '✓ READY TO FIGHT!';
             readyIndicator.className = 'ready-indicator ready';
         }
-
     } else {
         readyBtn.disabled = true;
         readyBtn.style.opacity = '0.5';
         readyBtn.style.cursor = 'not-allowed';
+        
         if (readyIndicator) {
             const remaining = 10 - placedShipsCount;
             readyIndicator.textContent = `⚡ PLACE YOUR SHIPS (${remaining} left)`;
@@ -216,25 +209,29 @@ export function updateReadyButton(placedShipsCount) {
 }
 
 export function onReadyButtonClick() {
+    console.log('Ready button clicked. Placed ships:', placedShips.length);
+    
     if (placedShips.length === 10) {
-        sendPlayerReady();  
+        sendMyShipsToServer();
+        
+        setTimeout(() => {
+            sendPlayerReady();
+        }, 100);
+        
         const readyBtn = getElement('readyBtn');
         if (readyBtn) {
             readyBtn.disabled = true;
             readyBtn.textContent = '✓ WAITING FOR OPPONENT...';
         }
     } else {
-        alert('Place all ships first!');
+        alert(`Place all ships first! (${placedShips.length}/10 placed)`);
     }
 }
 
-
-// ui.js - switchToBattleMode
 export function switchToBattleMode() {
     removeShipPlacementEvents();
     hideShipPlacementUI();
     showBattleUI();
-    
     
     const enemyBoard = document.getElementById('rightBoard');
     if (enemyBoard) {

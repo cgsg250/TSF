@@ -2,9 +2,10 @@
 // SHIP PLACEMENT MODULE
 // =============================================================
 
-import { BOARD_SIZE, CELL_SIZE, drawLeftBoard, drawRightBoard, drawCoordinateLabels, setBoardData, drawGrid }  from './board.js';
+import { BOARD_SIZE, CELL_SIZE, drawLeftBoard, drawRightBoard, drawCoordinateLabels, setBoardData, drawGrid } from './board.js';
 import { updateShipButtons, updateReadyButton } from './ui.js';
 import { getElement } from './utils.js';
+import { sendShipsToServer } from './network.js';
 
 // ============================================
 // STATE VARIABLES
@@ -114,12 +115,19 @@ function getShipAtCell(row, col) {
 }
 
 // ============================================
-// UI UPDATE (no circular dependency)
+// UI UPDATE
 // ============================================
 
 function updateUI() {
     updateShipButtons(remainingShips, selectedShipSize, isShipAttached);
     updateReadyButton(placedShips.length);
+}
+
+export function sendMyShipsToServer() {
+    if (myBoardData) {
+        console.log('Sending my ships to server...');
+        sendShipsToServer(myBoardData);
+    }
 }
 
 // ============================================
@@ -196,7 +204,6 @@ export function resetPlacement() {
         const ctx = leftCanvas.getContext('2d');
         ctx.fillStyle = '#2c3e6e';
         ctx.fillRect(0, 0, leftCanvas.width, leftCanvas.height);
-        
         drawGrid(ctx, leftCanvas);
     }
     
@@ -230,7 +237,6 @@ export function randomBoard() {
             const cells = getShipCells(startRow, startCol, size, direction);
             
             if (canPlaceShip(cells)) {
-                // Place ship
                 for (const cell of cells) {
                     myBoardData[cell.row][cell.col] = 1;
                 }
@@ -251,12 +257,13 @@ export function randomBoard() {
         
         if (!placed) {
             console.log(`Failed to place ship of size ${size}, restarting...`);
-            randomBoard(); // Recursive restart
+            randomBoard();
             return;
         }
     }
     
     setBoardData(myBoardData, enemyBoardData);
+    sendMyShipsToServer();
     updateUI();         
     drawLeftBoard();    
     
@@ -272,7 +279,8 @@ export function rotateBoard() {
     currentDirection = currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
     
     if (currentHoverCell && isShipAttached) {
-        onMouseMove({ clientX: currentHoverCell.clientX, clientY: currentHoverCell.clientY });
+        const fakeEvent = { clientX: currentHoverCell.clientX, clientY: currentHoverCell.clientY };
+        onMouseMove(fakeEvent);
     }
     
     const rotateBtn = getElement('rotateBtn');
@@ -304,6 +312,8 @@ export function selectShip(size) {
     if (leftBoard) {
         leftBoard.style.cursor = 'crosshair';
     }
+    
+    console.log(`Selected ship of size ${size}`);
 }
 
 export function deselectShip() {
@@ -321,22 +331,14 @@ export function deselectShip() {
     }
     
     updateUI();
+    
+    console.log('Ship deselected');
 }
 
 export function clearGhostShip() {
     ghostCells = [];
     isValidPlacement = false;
-    
     drawLeftBoard();
-    
-    const canvas = document.getElementById('leftBoard');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#2c3e6e';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        drawGrid(ctx, canvas);
-        drawLeftBoard(); 
-    }
 }
 
 // ============================================
@@ -456,9 +458,10 @@ export function setupShipPlacementEvents() {
     leftBoard.addEventListener('click', onBoardClick);
     leftBoard.addEventListener('contextmenu', onBoardRightClick);
     leftBoard.addEventListener('wheel', onWheelRotate);
+    
+    console.log('Ship placement events setup');
 }
 
-// Remove all ship placement events (for battle mode)
 export function removeShipPlacementEvents() {
     const leftBoard = document.getElementById('leftBoard');
     if (!leftBoard) return;
@@ -481,10 +484,8 @@ export function initShipPlacement() {
     myBoardData = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
     enemyBoardData = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
     
-    // Set board data references in board module
     setBoardData(myBoardData, enemyBoardData);
     
-    // Reset placement state
     placedShips = [];
     selectedShipSize = null;
     isShipAttached = false;
@@ -501,10 +502,9 @@ export function initShipPlacement() {
         1: 4
     };
     
-    // Draw everything
-    drawCoordinateLabels();  
-    drawLeftBoard();         
-    drawRightBoard();        
+    drawCoordinateLabels();
+    drawLeftBoard();
+    drawRightBoard();
     
     updateUI();
     setupShipPlacementEvents();

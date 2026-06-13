@@ -1,15 +1,14 @@
 // =============================================================
-// USER MODULE
+// NETWORK MODULE
 // =============================================================
 
 import { getElement } from './utils.js';
 import { showWaitingRoom, showMainMenu, showGameBoard, updatePlayerNames, updateBoardLabels, switchToBattleMode } from './ui.js';
-import { updateAfterMove, setMyTurn, setMySocketId } from './game_logic.js';
+import { updateAfterMove, setMyTurn, setMySocketId, startBattle } from './game_logic.js';
 
 export let socket = null;
 export let currentRoomId = null;
 
-// Send move to server
 export function sendMoveToServer(row, col) {
     if (!socket || !currentRoomId) {
         console.error('Cannot send move: not connected');
@@ -25,7 +24,20 @@ export function sendMoveToServer(row, col) {
     return true;
 }
 
-// Send player ready signal to server
+export function sendShipsToServer(boardData) {
+    if (!socket || !currentRoomId) {
+        console.error('Cannot send ships: not connected');
+        return false;
+    }
+    
+    console.log('Sending ships to server...');
+    socket.emit('updateShips', {
+        roomId: currentRoomId,
+        boardData: boardData
+    });
+    return true;
+}
+
 export function sendPlayerReady() {
     if (!socket || !currentRoomId) {
         console.error('Cannot send ready: not connected');
@@ -69,7 +81,6 @@ export function initSocket() {
     socket.on('gameReady', (data) => {
         console.log('Game ready!', data);
 
-        // Determine which player is me
         let myNickname = '';
         let opponentNickname = '';
 
@@ -86,49 +97,21 @@ export function initSocket() {
             }
         }
 
-        // network.js - обработчик startBattle
-        socket.on('startBattle', (data) => {
-            console.log('🔥 START BATTLE RECEIVED! 🔥');
-            console.log('Full data:', data);
-
-            let currentTurn = data.currentTurn;
-
-            // Временный фикс: если currentTurn undefined, назначаем текущего игрока
-            if (!currentTurn) {
-                console.warn('currentTurn is undefined! Setting current player as first turn');
-                currentTurn = socket.id;
-            }
-
-            console.log('Current turn socket ID:', currentTurn);
-            console.log('My socket ID:', socket.id);
-            console.log('Is my turn?', currentTurn === socket.id);
-
-            // Pass currentTurn to startBattle function
-            if (typeof startBattle === 'function') {
-                startBattle(currentTurn);
-            }
-
-            // Also set turn directly
-            setMyTurn(currentTurn === socket.id);
-
-            // Switch to battle UI
-            switchToBattleMode();
-        });
-        // Update board names
         updatePlayerNames(myNickname, opponentNickname);
         updateBoardLabels();
-
         showGameBoard();
     });
 
     socket.on('roomLeft', (data) => {
         console.log(data.message);
+        currentRoomId = null;
         showMainMenu();
     });
 
     socket.on('opponentLeft', (data) => {
         console.log(data.message);
         alert(data.message);
+        currentRoomId = null;
         showMainMenu();
     });
 
@@ -140,32 +123,40 @@ export function initSocket() {
     socket.on('moveResult', (data) => {
         console.log('Move result received:', data);
 
-        // Update game state
         updateAfterMove({
             playerId: data.playerId,
             row: data.row,
             col: data.col,
             hit: data.hit,
+            shipDestroyed: data.shipDestroyed,
+            destroyedCells: data.destroyedCells,
             currentTurn: data.currentTurn,
             gameOver: data.gameOver,
             winner: data.winner
         });
 
-        // Update turn display
         setMyTurn(data.currentTurn === socket.id);
     });
 
-    // Handle start battle
     socket.on('startBattle', (data) => {
         console.log('Start battle!', data);
+        
+        let currentTurn = data.currentTurn;
+        
+        if (!currentTurn) {
+            console.warn('currentTurn is undefined! Setting current player as first turn');
+            currentTurn = socket.id;
+        }
+        
+        console.log('Current turn socket ID:', currentTurn);
+        console.log('My socket ID:', socket.id);
+        console.log('Is my turn?', currentTurn === socket.id);
+        
+        startBattle(currentTurn);
+        setMyTurn(currentTurn === socket.id);
         switchToBattleMode();
-        setMyTurn(data.currentTurn === socket.id);
     });
 }
-
-// ============================================
-// GAME FUNCTIONS
-// ============================================
 
 export function createRoom() {
     const nicknameInput = getElement('nickname');
@@ -202,7 +193,7 @@ export function joinRoom() {
         } else {
             alert('Failed to join room: ' + response.message);
         }
-    });;
+    });
 }
 
 export function joinRoomById(roomId) {
@@ -215,6 +206,8 @@ export function joinRoomById(roomId) {
 }
 
 export function leaveRoom() {
+    if (!socket) return;
+    
     socket.emit('leaveRoom', (response) => {
         console.log('Server response:', response);
         if (response && response.success) {
@@ -226,6 +219,8 @@ export function leaveRoom() {
 }
 
 export function refreshRoomsList() {
+    if (!socket) return;
+    
     socket.emit('getRooms', (rooms) => {
         const roomsList = getElement('roomsList');
         if (!roomsList) return;
@@ -248,12 +243,14 @@ export function refreshRoomsList() {
 
         const joinButtons = document.querySelectorAll('.join-room-btn');
         joinButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const roomId = button.getAttribute('data-room-id');
-                joinRoomById(roomId);
-            });
+            button.removeEventListener('click', handleJoinClick);
+            button.addEventListener('click', handleJoinClick);
         });
     });
 }
 
-
+function handleJoinClick(e) {
+    const button = e.currentTarget;
+    const roomId = button.getAttribute('data-room-id');
+    joinRoomById(roomId);
+}

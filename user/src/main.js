@@ -3,10 +3,10 @@
 // ============================================
 
 import { getElement } from './utils.js';
-import { showMainMenu, onReadyButtonClick } from './ui.js';
+import { showMainMenu, onReadyButtonClick, updateReadyButton } from './ui.js';
 import { initSocket, createRoom, joinRoom, leaveRoom, refreshRoomsList } from './network.js';
-import { randomBoard, resetPlacement, rotateBoard, getBoardPosition } from './ships.js';
-import { makeMove } from './game_logic.js';
+import { randomBoard, resetPlacement, rotateBoard, getBoardPosition, placedShips } from './ships.js';
+import { makeMove, setMySocketId } from './game_logic.js';
 
 // ============================================================
 // INITIALIZATION
@@ -14,10 +14,8 @@ import { makeMove } from './game_logic.js';
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing Sea Battle...');
 
-    // Initialize socket connection
     initSocket();
 
-    // Setup event listeners for room buttons
     const createRoomBtn = getElement('createRoomBtn');
     if (createRoomBtn) createRoomBtn.addEventListener('click', createRoom);
 
@@ -31,10 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (refreshRoomsBtn) refreshRoomsBtn.addEventListener('click', refreshRoomsList);
 
     // ============================================
-    // ACTION BUTTONS (RANDOM, RESET, ROTATE)
+    // ACTION BUTTONS
     // ============================================
 
-    // RANDOM button
     const randomBtn = getElement('randomBtn');
     if (randomBtn) {
         randomBtn.addEventListener('click', () => {
@@ -43,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // RESET button
     const resetBtn = getElement('resetBtn');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
@@ -52,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ROTATE button
     const rotateBtn = getElement('rotateBtn');
     if (rotateBtn) {
         rotateBtn.addEventListener('click', () => {
@@ -61,11 +56,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // READY button
     const readyBtn = getElement('readyBtn');
     if (readyBtn) {
         readyBtn.addEventListener('click', onReadyButtonClick);
     }
+
+    // ============================================
+    // ENEMY BOARD CLICK HANDLER
+    // ============================================
 
     const enemyBoard = document.getElementById('rightBoard');
     if (enemyBoard) {
@@ -74,15 +72,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pos) {
                 console.log(`Player shoots at row: ${pos.row}, col: ${pos.col}`);
                 const result = makeMove(pos.row, pos.col);
-                console.log('Move result:', result);
+                if (result && !result.success) {
+                    console.log('Move failed:', result.message);
+                }
             }
         });
     }
 
-    // Start with main menu visible
-    showMainMenu();
+    // ============================================
+    // START
+    // ============================================
 
-    // Refresh rooms list every 5 seconds
+    showMainMenu();
     setInterval(refreshRoomsList, 5000);
 });
-
