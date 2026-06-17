@@ -3,10 +3,10 @@
 // ============================================
 
 import { getElement } from './utils.js';
-import { showMainMenu, onReadyButtonClick, updateReadyButton } from './ui.js';
+import { showMainMenu, onReadyButtonClick } from './ui.js';
 import { initSocket, createRoom, joinRoom, leaveRoom, refreshRoomsList } from './network.js';
-import { randomBoard, resetPlacement, rotateBoard, getBoardPosition, placedShips } from './ships.js';
-import { makeMove, setMySocketId } from './game_logic.js';
+import { randomBoard, resetPlacement, rotateBoard, getBoardPosition } from './ships.js';
+import { makeMove } from './game_logic.js';
 
 // ============================================================
 // INITIALIZATION
@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     // ACTION BUTTONS
     // ============================================
-
+                      
+    // Random btn event
     const randomBtn = getElement('randomBtn');
     if (randomBtn) {
         randomBtn.addEventListener('click', () => {
@@ -39,7 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
             randomBoard();
         });
     }
-
+                       
+    // Reset btn event
     const resetBtn = getElement('resetBtn');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
@@ -47,7 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
             resetPlacement();
         });
     }
-
+                             
+    // Rotate btn event
     const rotateBtn = getElement('rotateBtn');
     if (rotateBtn) {
         rotateBtn.addEventListener('click', () => {
@@ -56,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Add ready button event
     const readyBtn = getElement('readyBtn');
     if (readyBtn) {
         readyBtn.addEventListener('click', onReadyButtonClick);
@@ -65,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ENEMY BOARD CLICK HANDLER
     // ============================================
 
+    // Add enemy board event
     const enemyBoard = document.getElementById('rightBoard');
     if (enemyBoard) {
         enemyBoard.addEventListener('click', (e) => {

@@ -32,6 +32,7 @@ let nextShipId = 1;
 // HELPER FUNCTIONS
 // ============================================
 
+// Get cell by coord of mouse
 export function getBoardPosition(canvasId, clientX, clientY) {
     const canvas = document.getElementById(canvasId);
     const rect = canvas.getBoundingClientRect();
@@ -49,7 +50,8 @@ export function getBoardPosition(canvasId, clientX, clientY) {
     }
     return null;
 }
-
+                             
+// Get cells of ship by it parametrs
 function getShipCells(startRow, startCol, size, direction) {
     const cells = [];
     
@@ -65,11 +67,13 @@ function getShipCells(startRow, startCol, size, direction) {
     
     return cells;
 }
-
+                                    
+// Logic function who checked cell in board or no
 function isValidCell(row, col) {
     return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
 }
-
+                                                 
+// Check ship arround
 function hasNoAdjacentShips(cells) {
     const directions = [
         [-1, -1], [-1, 0], [-1, 1],
@@ -92,7 +96,8 @@ function hasNoAdjacentShips(cells) {
     
     return true;
 }
-
+                     
+// Can player place ship
 function canPlaceShip(cells) {
     for (const cell of cells) {
         if (!isValidCell(cell.row, cell.col)) return false;
@@ -103,11 +108,7 @@ function canPlaceShip(cells) {
     
     return true;
 }
-
-function areAllShipsPlaced() {
-    return placedShips.length === 10;
-}
-
+                        
 function getShipAtCell(row, col) {
     return placedShips.find(ship => 
         ship.cells.some(cell => cell.row === row && cell.col === col)
@@ -117,12 +118,14 @@ function getShipAtCell(row, col) {
 // ============================================
 // UI UPDATE
 // ============================================
-
+                 
+// Update all buttons
 function updateUI() {
     updateShipButtons(remainingShips, selectedShipSize, isShipAttached);
     updateReadyButton(placedShips.length);
 }
-
+                     
+// Send turn to server
 export function sendMyShipsToServer() {
     if (myBoardData) {
         console.log('Sending my ships to server...');
@@ -133,7 +136,8 @@ export function sendMyShipsToServer() {
 // ============================================
 // CORE SHIP PLACEMENT FUNCTIONS
 // ============================================
-
+       
+// Place one ship
 function placeShip(cells, size) {
     const shipId = nextShipId++;
     
@@ -152,7 +156,8 @@ function placeShip(cells, size) {
     drawLeftBoard();
     updateUI();
 }
-
+                                             
+// Delete ship from board
 function removeShip(ship) {
     if (!ship) return false;
     
@@ -176,7 +181,8 @@ function removeShip(ship) {
 // ============================================
 // PUBLIC API
 // ============================================
-
+                   
+// Reset all ships (clear array and variables)
 export function resetPlacement() {
     console.log('Resetting ship placement...');
     
@@ -213,7 +219,8 @@ export function resetPlacement() {
     
     console.log('Reset complete, board cleared');
 }
-
+                                  
+// Random board set
 export function randomBoard() {
     console.log('Random board generation started...');
     
@@ -269,7 +276,8 @@ export function randomBoard() {
     
     console.log('Random placement complete! Ships placed:', totalPlaced);
 }
-
+                  
+// Rotate board function (SWAP X -> Y)
 export function rotateBoard() {
     if (!isShipAttached) {
         console.log('No ship selected to rotate');
@@ -291,7 +299,8 @@ export function rotateBoard() {
         }, 200);
     }
 }
-
+                    
+// Select one ship by size
 export function selectShip(size) {
     if (remainingShips[size] === 0) {
         console.log(`No more ${size}-cell ships available`);
@@ -315,7 +324,8 @@ export function selectShip(size) {
     
     console.log(`Selected ship of size ${size}`);
 }
-
+                 
+// Deselect ui ships
 export function deselectShip() {
     if (!isShipAttached) return;
     
@@ -334,7 +344,8 @@ export function deselectShip() {
     
     console.log('Ship deselected');
 }
-
+                                     
+// Del ghost ship
 export function clearGhostShip() {
     ghostCells = [];
     isValidPlacement = false;
@@ -344,13 +355,15 @@ export function clearGhostShip() {
 // ============================================
 // GHOST SHIP & EVENT HANDLERS
 // ============================================
-
+                            
+// Aproximate place potentionaly ship
 function calculateGhostShip(row, col, size, direction) {
     const cells = getShipCells(row, col, size, direction);
     const valid = canPlaceShip(cells);
     return { cells, valid };
 }
-
+                                      
+// Draw potential place ship
 function drawGhostShip() {
     if (!isShipAttached || ghostCells.length === 0) return;
     
@@ -371,7 +384,8 @@ function drawGhostShip() {
         ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
     }
 }
-
+              
+// Function to parser muse move events
 function onMouseMove(e) {
     const canvas = document.getElementById('leftBoard');
     if (!canvas || !isShipAttached || !selectedShipSize) return;
@@ -396,7 +410,8 @@ function onMouseMove(e) {
         drawGhostShip();
     }
 }
-
+                                  
+// Function to parser left click board
 function onBoardClick(e) {
     if (!isShipAttached || !selectedShipSize) return;
     
@@ -420,7 +435,8 @@ function onBoardClick(e) {
         updateUI();
     }
 }
-
+                                     
+// Function to parser right click to board
 function onBoardRightClick(e) {
     e.preventDefault();
     
@@ -437,14 +453,16 @@ function onBoardRightClick(e) {
         removeShip(ship);
     }
 }
-
+                                          
+// Function to parser wheel rotate
 function onWheelRotate(e) {
     e.preventDefault();
     if (isShipAttached) {
         rotateBoard();
     }
 }
-
+                                    
+// Set events to default ship buttons
 export function setupShipPlacementEvents() {
     const leftBoard = document.getElementById('leftBoard');
     if (!leftBoard) return;
@@ -461,7 +479,8 @@ export function setupShipPlacementEvents() {
     
     console.log('Ship placement events setup');
 }
-
+              
+// Delee events from default buttons
 export function removeShipPlacementEvents() {
     const leftBoard = document.getElementById('leftBoard');
     if (!leftBoard) return;
@@ -478,6 +497,7 @@ export function removeShipPlacementEvents() {
 // INITIALIZATION
 // ============================================
 
+// Clear boards and fill variavbles
 export function initShipPlacement() {
     console.log('Initializing ship placement...');
     

@@ -23,12 +23,14 @@ const TOTAL_SHIP_CELLS = 20;
 // =============================================================
 // INITIALIZATION
 // =============================================================
-
+                                 
+// Set mysocketid variavble
 export function setMySocketId(socketId) {
     mySocketId = socketId;
     console.log('My socket ID set:', mySocketId);
 }
-
+                
+// Fill game state and start game
 export function startBattle(currentTurn) {
     console.log('startBattle called with currentTurn:', currentTurn);
     console.log('mySocketId:', mySocketId);
@@ -46,7 +48,8 @@ export function startBattle(currentTurn) {
     
     console.log(`Battle started! Game active: ${isGameActive}, Your turn: ${isPlayerTurn}`);
 }
-
+              
+// First init game
 export function initGame() {
     console.log('Initializing game...');
     gameWinner = null;
@@ -56,7 +59,8 @@ export function initGame() {
     updateTurnDisplay();
     hideGameOverModal();
 }
-
+                              
+// Set my turn
 export function setMyTurn(isMyTurn) {
     console.log('setMyTurn called with:', isMyTurn, 'mySocketId:', mySocketId);
     isPlayerTurn = isMyTurn;
@@ -64,7 +68,8 @@ export function setMyTurn(isMyTurn) {
     updateTurnDisplay();
     console.log(`Turn set: ${isPlayerTurn ? 'YOUR turn' : 'ENEMY turn'}, Game active: ${isGameActive}`);
 }
-
+                      
+// Start new game in this room
 export function resetGame() {
     gameWinner = null;
     isGameActive = true;
@@ -78,7 +83,8 @@ export function resetGame() {
 // =============================================================
 // MOVE HANDLING
 // =============================================================
-
+                           
+// Make move by player
 export function makeMove(row, col) {
     if (!isGameActive) {
         console.log('Game not active!');
@@ -105,13 +111,10 @@ export function makeMove(row, col) {
     
     return { success: true, pending: true };
 }
-
+                
+// Update boards after turn                                                         
 export function updateAfterMove(data) {
     const { playerId, row, col, hit, shipDestroyed, destroyedCells, currentTurn, gameOver, winner } = data;
-    
-    console.log(`=== MOVE RESULT ===`);
-    console.log(`Server says: ${hit ? 'HIT' : 'MISS'} at (${row}, ${col})`);
-    console.log(`Ship destroyed: ${shipDestroyed}`);
     
     if (playerId === mySocketId) {
         if (hit) {
@@ -150,7 +153,8 @@ export function updateAfterMove(data) {
 // =============================================================
 // UI FUNCTIONS
 // =============================================================
-
+               
+// Update turn
 export function updateTurnDisplay() {
     const turnIndicator = getElement('turnIndicator');
     if (!turnIndicator) return;
@@ -173,7 +177,8 @@ export function updateTurnDisplay() {
         turnIndicator.style.border = '2px solid #f39c12';
     }
 }
-
+ 
+// Update turn 
 export function updateTurnDisplayWaiting() {
     const turnIndicator = getElement('turnIndicator');
     if (!turnIndicator) return;
@@ -182,49 +187,8 @@ export function updateTurnDisplayWaiting() {
     turnIndicator.style.background = '#95a5a6';
     turnIndicator.style.border = '2px solid #7f8c8d';
 }
-
-function showHitEffect(row, col, isHit) {
-    const canvas = document.getElementById(isHit ? 'rightBoard' : 'leftBoard');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    const cellSize = canvas.width / BOARD_SIZE;
-    const x = col * cellSize;
-    const y = row * cellSize;
-    
-    if (isHit) {
-        ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
-        ctx.fillRect(x, y, cellSize, cellSize);
-        
-        ctx.strokeStyle = '#c0392b';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(x + 5, y + 5);
-        ctx.lineTo(x + cellSize - 5, y + cellSize - 5);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x + cellSize - 5, y + 5);
-        ctx.lineTo(x + 5, y + cellSize - 5);
-        ctx.stroke();
-    } else {
-        ctx.fillStyle = 'rgba(236, 240, 241, 0.8)';
-        ctx.fillRect(x, y, cellSize, cellSize);
-        
-        ctx.fillStyle = '#ecf0f1';
-        ctx.beginPath();
-        ctx.arc(x + cellSize/2, y + cellSize/2, 5, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    
-    setTimeout(() => {
-        updateBoards();
-    }, 200);
-}
-
-function showShipDestroyedAnimation(row, col) {
-    console.log('Ship destroyed at', row, col);
-}
-
+       
+// Show last panel
 export function showGameOverModal(message) {
     const modal = getElement('gameOverModal');
     const messageEl = getElement('gameOverMessage');
@@ -234,6 +198,7 @@ export function showGameOverModal(message) {
     updateTurnDisplay();
 }
 
+// Hide last panel
 export function hideGameOverModal() {
     const modal = getElement('gameOverModal');
     if (modal) modal.style.display = 'none';
@@ -256,7 +221,8 @@ export function surrender() {
 // =============================================================
 // DEBUG FUNCTIONS
 // =============================================================
-
+                
+// Get value game state function to others module
 export function getGameState() {
     return {
         isPlayerTurn,
@@ -266,7 +232,8 @@ export function getGameState() {
         isGameActive
     };
 }
-
+                                                 
+// Log game state (debug)
 export function logGameState() {
     console.log('=== GAME STATE ===');
     console.log('isPlayerTurn:', isPlayerTurn);

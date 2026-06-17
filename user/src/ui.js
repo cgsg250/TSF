@@ -78,6 +78,7 @@ export function showBattleUI() {
     }
 }
 
+
 export function showShipPlacementUI() {
     const shipPalette = getElement('shipPalette');
     if (shipPalette) shipPalette.style.display = 'flex';
@@ -114,8 +115,8 @@ export function updateBoardLabels() {
     const leftLabel = document.getElementById('leftBoardLabel');
     const rightLabel = document.getElementById('rightBoardLabel');
 
-    if (leftLabel) leftLabel.textContent = '⚓ YOUR FLEET';
-    if (rightLabel) rightLabel.textContent = '⚔️ ENEMY FLEET';
+    if (leftLabel) leftLabel.textContent = 'YOUR FLEET';
+    if (rightLabel) rightLabel.textContent = 'ENEMY FLEET';
 }
 
 export function updatePlayerNames(myNickname, opponentNickname) {
@@ -134,7 +135,7 @@ export function updateShipButtons(remainingShips, selectedShipSize, isShipAttach
     if (!remainingShips) {
         console.warn('updateShipButtons: remainingShips is undefined');
         return;
-    }
+    }                                         
     
     const shipButtons = document.querySelectorAll('.ship-btn');
     
