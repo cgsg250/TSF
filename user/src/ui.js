@@ -46,7 +46,11 @@ export function showGameBoard() {
     if (waitingRoom) waitingRoom.style.display = 'none';
     if (gameBoard) gameBoard.style.display = 'flex';
 
+    showShipPlacementUI();
+    
     initShipPlacement();
+    
+    console.log('Game board shown, ship placement UI displayed');
 }
 
 export function hideShipPlacementUI() {
@@ -66,45 +70,42 @@ export function hideShipPlacementUI() {
     if (readyIndicator) readyIndicator.style.display = 'none';
 }
 
-export function showBattleUI() {
-    const giveupBtn = getElement('giveupBtn');
-    if (giveupBtn) {
-        giveupBtn.style.display = 'block';
-    }
-    
+export function showBattleUI() {    
     const turnIndicator = getElement('turnIndicator');
     if (turnIndicator) {
         turnIndicator.style.display = 'block';
+        turnIndicator.textContent = 'YOUR TURN!';
+        turnIndicator.style.background = '#27ae60';
     }
 }
 
-
 export function showShipPlacementUI() {
     const shipPalette = getElement('shipPalette');
-    if (shipPalette) shipPalette.style.display = 'flex';
-    
     const randBtn = getElement('randomBtn');
     const rotateBtn = getElement('rotateBtn');
     const resetBtn = getElement('resetBtn');
     const readyBtn = getElement('readyBtn');
     const readyIndicator = getElement('readyIndicator');
+    const turnIndicator = getElement('turnIndicator');  
 
+    if (turnIndicator) {
+        turnIndicator.style.display = 'none';
+    }
+
+    if (shipPalette) shipPalette.style.display = 'flex';
     if (randBtn) randBtn.style.display = 'inline-block';
     if (rotateBtn) rotateBtn.style.display = 'inline-block';
     if (resetBtn) resetBtn.style.display = 'inline-block';
-    if (readyBtn) readyBtn.style.display = 'inline-block';
-    if (readyIndicator) readyIndicator.style.display = 'block';
-    
-    const giveupBtn = getElement('giveupBtn');
-    if (giveupBtn) giveupBtn.style.display = 'none';
-}
-
-export function updateTurnDisplayWaiting() {
-    const turnIndicator = getElement('turnIndicator');
-    if (!turnIndicator) return;
-    
-    turnIndicator.textContent = '⏳ WAITING FOR SERVER...';
-    turnIndicator.style.background = '#95a5a6';
+    if (readyBtn) {
+        readyBtn.style.display = 'inline-block';
+        readyBtn.disabled = true;
+        readyBtn.textContent = 'PLACE SHIPS';
+    }
+    if (readyIndicator) {
+        readyIndicator.style.display = 'block';
+        readyIndicator.textContent = 'PLACE YOUR SHIPS (10 left)';
+        readyIndicator.className = 'ready-indicator not-ready';
+    }
 }
 
 // ============================================
@@ -135,7 +136,7 @@ export function updateShipButtons(remainingShips, selectedShipSize, isShipAttach
     if (!remainingShips) {
         console.warn('updateShipButtons: remainingShips is undefined');
         return;
-    }                                         
+    }
     
     const shipButtons = document.querySelectorAll('.ship-btn');
     
@@ -171,8 +172,6 @@ function handleShipButtonClick(e) {
     
     if (isNaN(size)) return;
     
-    console.log('Ship button clicked, size:', size);
-    
     import('./ships.js').then(module => {
         module.selectShip(size);
     });
@@ -193,7 +192,7 @@ export function updateReadyButton(placedShipsCount) {
         readyBtn.addEventListener('click', onReadyButtonClick);
         
         if (readyIndicator) {
-            readyIndicator.textContent = '✓ READY TO FIGHT!';
+            readyIndicator.textContent = 'READY TO FIGHT!';
             readyIndicator.className = 'ready-indicator ready';
         }
     } else {
@@ -203,7 +202,7 @@ export function updateReadyButton(placedShipsCount) {
         
         if (readyIndicator) {
             const remaining = 10 - placedShipsCount;
-            readyIndicator.textContent = `⚡ PLACE YOUR SHIPS (${remaining} left)`;
+            readyIndicator.textContent = `PLACE SHIPS (${remaining} left)`;
             readyIndicator.className = 'ready-indicator not-ready';
         }
     }
@@ -222,7 +221,7 @@ export function onReadyButtonClick() {
         const readyBtn = getElement('readyBtn');
         if (readyBtn) {
             readyBtn.disabled = true;
-            readyBtn.textContent = '✓ WAITING FOR OPPONENT...';
+            readyBtn.textContent = 'WAITING FOR OPPONENT...';
         }
     } else {
         alert(`Place all ships first! (${placedShips.length}/10 placed)`);
@@ -238,6 +237,4 @@ export function switchToBattleMode() {
     if (enemyBoard) {
         enemyBoard.style.cursor = 'crosshair';
     }
-    
-    console.log('Switched to battle mode - waiting for turn from server');
 }

@@ -23,18 +23,12 @@ const TOTAL_SHIP_CELLS = 20;
 // =============================================================
 // INITIALIZATION
 // =============================================================
-                                 
-// Set mysocketid variavble
+
 export function setMySocketId(socketId) {
     mySocketId = socketId;
-    console.log('My socket ID set:', mySocketId);
 }
-                
-// Fill game state and start game
+
 export function startBattle(currentTurn) {
-    console.log('startBattle called with currentTurn:', currentTurn);
-    console.log('mySocketId:', mySocketId);
-    
     gameWinner = null;
     isGameActive = true;
     playerHits = 0;
@@ -45,13 +39,9 @@ export function startBattle(currentTurn) {
     updateBoards();
     updateTurnDisplay();
     hideGameOverModal();
-    
-    console.log(`Battle started! Game active: ${isGameActive}, Your turn: ${isPlayerTurn}`);
 }
-              
-// First init game
+
 export function initGame() {
-    console.log('Initializing game...');
     gameWinner = null;
     isGameActive = true;
     playerHits = 0;
@@ -59,20 +49,16 @@ export function initGame() {
     updateTurnDisplay();
     hideGameOverModal();
 }
-                              
-// Set my turn
+
 export function setMyTurn(isMyTurn) {
-    console.log('setMyTurn called with:', isMyTurn, 'mySocketId:', mySocketId);
     isPlayerTurn = isMyTurn;
     isGameActive = true;
     updateTurnDisplay();
-    console.log(`Turn set: ${isPlayerTurn ? 'YOUR turn' : 'ENEMY turn'}, Game active: ${isGameActive}`);
 }
-                      
-// Start new game in this room
+
 export function resetGame() {
     gameWinner = null;
-    isGameActive = true;
+    isGameActive = false;
     isPlayerTurn = false;
     playerHits = 0;
     enemyHits = 0;
@@ -83,26 +69,21 @@ export function resetGame() {
 // =============================================================
 // MOVE HANDLING
 // =============================================================
-                           
-// Make move by player
+
 export function makeMove(row, col) {
     if (!isGameActive) {
-        console.log('Game not active!');
         return { success: false, message: 'Game not active' };
     }
     
     if (gameWinner !== null) {
-        console.log('Game already over!');
         return { success: false, message: 'Game already over' };
     }
     
     if (!isPlayerTurn) {
-        console.log('Not your turn!');
         return { success: false, message: 'Not your turn' };
     }
     
     if (enemyBoardData[row][col] === 2 || enemyBoardData[row][col] === 3) {
-        console.log('Already shot here!');
         return { success: false, message: 'Already shot here' };
     }
     
@@ -111,8 +92,7 @@ export function makeMove(row, col) {
     
     return { success: true, pending: true };
 }
-                
-// Update boards after turn                                                         
+
 export function updateAfterMove(data) {
     const { playerId, row, col, hit, shipDestroyed, destroyedCells, currentTurn, gameOver, winner } = data;
     
@@ -122,7 +102,6 @@ export function updateAfterMove(data) {
             playerHits++;
             
             if (shipDestroyed && destroyedCells && destroyedCells.length > 0) {
-                console.log('Ship destroyed! Adding outline...');
                 addDestroyedShip(destroyedCells);
             }
         } else {
@@ -153,13 +132,10 @@ export function updateAfterMove(data) {
 // =============================================================
 // UI FUNCTIONS
 // =============================================================
-               
-// Update turn
+
 export function updateTurnDisplay() {
     const turnIndicator = getElement('turnIndicator');
     if (!turnIndicator) return;
-    
-    console.log('updateTurnDisplay: isPlayerTurn =', isPlayerTurn, 'isGameActive =', isGameActive);
     
     if (!isGameActive || gameWinner !== null) {
         turnIndicator.textContent = gameWinner === 'player' ? 'YOU WIN!' : 'YOU LOSE!';
@@ -177,8 +153,7 @@ export function updateTurnDisplay() {
         turnIndicator.style.border = '2px solid #f39c12';
     }
 }
- 
-// Update turn 
+
 export function updateTurnDisplayWaiting() {
     const turnIndicator = getElement('turnIndicator');
     if (!turnIndicator) return;
@@ -187,8 +162,7 @@ export function updateTurnDisplayWaiting() {
     turnIndicator.style.background = '#95a5a6';
     turnIndicator.style.border = '2px solid #7f8c8d';
 }
-       
-// Show last panel
+
 export function showGameOverModal(message) {
     const modal = getElement('gameOverModal');
     const messageEl = getElement('gameOverMessage');
@@ -198,48 +172,7 @@ export function showGameOverModal(message) {
     updateTurnDisplay();
 }
 
-// Hide last panel
 export function hideGameOverModal() {
     const modal = getElement('gameOverModal');
     if (modal) modal.style.display = 'none';
-}
-
-// =============================================================
-// SURRENDER
-// =============================================================
-
-export function surrender() {
-    if (!isGameActive) return;
-    if (gameWinner !== null) return;
-    
-    isGameActive = false;
-    gameWinner = 'enemy';
-    showGameOverModal('YOU SURRENDERED!');
-    console.log('Player surrendered');
-}
-
-// =============================================================
-// DEBUG FUNCTIONS
-// =============================================================
-                
-// Get value game state function to others module
-export function getGameState() {
-    return {
-        isPlayerTurn,
-        gameWinner,
-        playerHits,
-        enemyHits,
-        isGameActive
-    };
-}
-                                                 
-// Log game state (debug)
-export function logGameState() {
-    console.log('=== GAME STATE ===');
-    console.log('isPlayerTurn:', isPlayerTurn);
-    console.log('gameWinner:', gameWinner);
-    console.log('playerHits:', playerHits);
-    console.log('enemyHits:', enemyHits);
-    console.log('isGameActive:', isGameActive);
-    console.log('================');
 }

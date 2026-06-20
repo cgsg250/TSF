@@ -4,7 +4,7 @@
 
 import { getElement } from './utils.js';
 import { showWaitingRoom, showMainMenu, showGameBoard, updatePlayerNames, updateBoardLabels, switchToBattleMode } from './ui.js';
-import { updateAfterMove, setMyTurn, setMySocketId, startBattle } from './game_logic.js';
+import { updateAfterMove, setMyTurn, setMySocketId, startBattle, resetGame } from './game_logic.js';
 
 export let socket = null;
 export let currentRoomId = null;
@@ -29,8 +29,7 @@ export function sendShipsToServer(boardData) {
         console.error('Cannot send ships: not connected');
         return false;
     }
-    
-    console.log('Sending ships to server...');
+
     socket.emit('updateShips', {
         roomId: currentRoomId,
         boardData: boardData
@@ -45,7 +44,6 @@ export function sendPlayerReady() {
     }
 
     socket.emit('playerReady');
-    console.log('Player ready signal sent');
     return true;
 }
 
@@ -64,7 +62,6 @@ export function initSocket() {
     });
 
     socket.on('waitingForOpponent', (data) => {
-        console.log(data.message);
         const roomStatus = getElement('roomStatus');
         if (roomStatus) {
             roomStatus.innerText = `Room: ${data.roomId} - ${data.message}`;
@@ -78,6 +75,7 @@ export function initSocket() {
         alert('Connection to server lost. Please refresh the page.');
     });
 
+    // --- GAME READY - shows placement screen ---
     socket.on('gameReady', (data) => {
         console.log('Game ready!', data);
 
@@ -99,7 +97,23 @@ export function initSocket() {
 
         updatePlayerNames(myNickname, opponentNickname);
         updateBoardLabels();
+        
+        // Show placement screen
         showGameBoard();
+    });
+
+    // --- START BATTLE - switches to battle mode ---
+    socket.on('startBattle', (data) => {
+        console.log('Start battle!', data);
+
+        let currentTurn = data.currentTurn;
+        if (!currentTurn) {
+            currentTurn = socket.id;
+        }
+
+        startBattle(currentTurn);
+        setMyTurn(currentTurn === socket.id);
+        switchToBattleMode();
     });
 
     socket.on('roomLeft', (data) => {
@@ -136,25 +150,6 @@ export function initSocket() {
         });
 
         setMyTurn(data.currentTurn === socket.id);
-    });
-
-    socket.on('startBattle', (data) => {
-        console.log('Start battle!', data);
-        
-        let currentTurn = data.currentTurn;
-        
-        if (!currentTurn) {
-            console.warn('currentTurn is undefined! Setting current player as first turn');
-            currentTurn = socket.id;
-        }
-        
-        console.log('Current turn socket ID:', currentTurn);
-        console.log('My socket ID:', socket.id);
-        console.log('Is my turn?', currentTurn === socket.id);
-        
-        startBattle(currentTurn);
-        setMyTurn(currentTurn === socket.id);
-        switchToBattleMode();
     });
 }
 
@@ -208,6 +203,8 @@ export function joinRoomById(roomId) {
 export function leaveRoom() {
     if (!socket) return;
     
+    resetGame();
+    
     socket.emit('leaveRoom', (response) => {
         console.log('Server response:', response);
         if (response && response.success) {
@@ -220,7 +217,7 @@ export function leaveRoom() {
 
 export function refreshRoomsList() {
     if (!socket) return;
-    
+
     socket.emit('getRooms', (rooms) => {
         const roomsList = getElement('roomsList');
         if (!roomsList) return;

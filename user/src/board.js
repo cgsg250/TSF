@@ -15,6 +15,11 @@ export function setBoardData(myData, enemyData) {
     enemyBoardData = enemyData;
 }
 
+export function clearDestroyedShips() {
+    destroyedEnemyShips = [];
+    drawRightBoard();
+}
+
 export function drawGrid(ctx, canvas) {
     ctx.strokeStyle = '#7f8c8d';
     ctx.lineWidth = 1;
@@ -34,7 +39,6 @@ export function drawGrid(ctx, canvas) {
     }
 }
 
-// Function to draw letters and numbers
 export function drawCoordinateLabels() {
     const leftColLabels = document.getElementById('leftColLabels');
     if (leftColLabels) {
@@ -80,8 +84,7 @@ export function drawCoordinateLabels() {
         }
     }
 }
-                                       
-// Function to draw red destroed ship(x)
+
 function drawDestroyedShip(ctx, cells, cellSize) {
     if (!cells || cells.length === 0) return;
     
@@ -114,8 +117,7 @@ function drawDestroyedShip(ctx, cells, cellSize) {
     ctx.lineTo(x, y + height);
     ctx.stroke();
 }
-                              
-// Function to draw my board
+
 export function drawLeftBoard() {
     const canvas = document.getElementById('leftBoard');
     if (!canvas) return;
@@ -157,8 +159,7 @@ export function drawLeftBoard() {
     
     drawGrid(ctx, canvas);
 }
-                            
-// Function to draw enemy board
+
 export function drawRightBoard() {
     const canvas = document.getElementById('rightBoard');
     if (!canvas) return;
@@ -198,22 +199,24 @@ export function drawRightBoard() {
     
     drawGrid(ctx, canvas);
 }
-                                
-// Function to mark destroyed ships
+
 export function addDestroyedShip(cells) {
     destroyedEnemyShips.push(cells);
     drawRightBoard();
 }
-                                   
-// Function redraw boards
+
 export function updateBoards() {
     drawLeftBoard();
     drawRightBoard();
 }
-                         
-// Functin initialization boards
+
 export function initBoards() {
     drawCoordinateLabels();
     drawLeftBoard();
+    drawRightBoard();
+}
+
+export function resetAllShips() {
+    destroyedEnemyShips = [];
     drawRightBoard();
 }
