@@ -48,7 +48,10 @@ export function sendPlayerReady() {
 }
 
 export function initSocket() {
-    socket = io();
+    socket = io('https://tsf-production-be63.up.railway.app/', {
+        transports: ['websocket'],
+        upgrade: false
+    });
 
     socket.on('connect', () => {
         console.log('Connected to server');
