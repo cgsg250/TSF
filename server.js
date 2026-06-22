@@ -11,7 +11,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    сors: {
+    cors: {
     origin: "*", 
     methods: ["GET", "POST"]
 });
