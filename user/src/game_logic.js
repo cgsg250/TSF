@@ -26,15 +26,19 @@ const TOTAL_SHIP_CELLS = 20;
 
 export function setMySocketId(socketId) {
     mySocketId = socketId;
+    console.log('setMySocketId:', mySocketId);
 }
 
 export function startBattle(currentTurn) {
+    console.log('startBattle: currentTurn=' + currentTurn + ', mySocketId=' + mySocketId);
+    
     gameWinner = null;
     isGameActive = true;
     playerHits = 0;
     enemyHits = 0;
     
     isPlayerTurn = (currentTurn === mySocketId);
+    console.log('startBattle: isPlayerTurn=' + isPlayerTurn);
     
     updateBoards();
     updateTurnDisplay();
@@ -51,6 +55,7 @@ export function initGame() {
 }
 
 export function setMyTurn(isMyTurn) {
+    console.log('setMyTurn: isMyTurn=' + isMyTurn + ', mySocketId=' + mySocketId);
     isPlayerTurn = isMyTurn;
     isGameActive = true;
     updateTurnDisplay();
@@ -96,6 +101,8 @@ export function makeMove(row, col) {
 export function updateAfterMove(data) {
     const { playerId, row, col, hit, shipDestroyed, destroyedCells, currentTurn, gameOver, winner } = data;
     
+    console.log('updateAfterMove: playerId=' + playerId + ', mySocketId=' + mySocketId + ', currentTurn=' + currentTurn);
+    
     if (playerId === mySocketId) {
         if (hit) {
             enemyBoardData[row][col] = 2;
@@ -117,6 +124,7 @@ export function updateAfterMove(data) {
     }
     
     isPlayerTurn = (currentTurn === mySocketId);
+    console.log('updateAfterMove: isPlayerTurn=' + isPlayerTurn);
     
     updateBoards();
     updateTurnDisplay();
@@ -136,6 +144,8 @@ export function updateAfterMove(data) {
 export function updateTurnDisplay() {
     const turnIndicator = getElement('turnIndicator');
     if (!turnIndicator) return;
+    
+    console.log('updateTurnDisplay: isPlayerTurn=' + isPlayerTurn + ', isGameActive=' + isGameActive + ', gameWinner=' + gameWinner);
     
     if (!isGameActive || gameWinner !== null) {
         turnIndicator.textContent = gameWinner === 'player' ? 'YOU WIN!' : 'YOU LOSE!';

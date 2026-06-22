@@ -74,8 +74,6 @@ export function showBattleUI() {
     const turnIndicator = getElement('turnIndicator');
     if (turnIndicator) {
         turnIndicator.style.display = 'block';
-        turnIndicator.textContent = 'YOUR TURN!';
-        turnIndicator.style.background = '#27ae60';
     }
 }
 
