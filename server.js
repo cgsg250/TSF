@@ -10,7 +10,11 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    сors: {
+    origin: "*", 
+    methods: ["GET", "POST"]
+});
 const port = process.env.PORT || 8002;
 
 // --- Middleware ---
