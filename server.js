@@ -10,10 +10,12 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server, {
-    cors: {
+  cors: {
     origin: "*", 
     methods: ["GET", "POST"]
+  }
 });
 const port = process.env.PORT || 8002;
 
