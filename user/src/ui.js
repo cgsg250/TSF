@@ -106,6 +106,16 @@ export function showShipPlacementUI() {
     }
 }
 
+export function hideShipPlacementButtons() {
+    const randBtn = getElement('randomBtn');
+    const rotateBtn = getElement('rotateBtn');
+    const resetBtn = getElement('resetBtn');
+
+    if (randBtn) randBtn.style.display = 'none';
+    if (rotateBtn) rotateBtn.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+}
+
 // ============================================
 // BOARD LABELS AND NAMES
 // ============================================
@@ -211,6 +221,7 @@ export function onReadyButtonClick() {
     
     if (placedShips.length === 10) {
         sendMyShipsToServer();
+        hideShipPlacementButtons();
         
         setTimeout(() => {
             sendPlayerReady();

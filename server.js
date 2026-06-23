@@ -10,14 +10,8 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
-
-const port = process.env.PORT || 8002; 
+const io = new Server(server);
+const port = 8002;
 
 // --- Middleware ---
 app.use(cookieParser());
@@ -482,6 +476,6 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(port, '0.0.0.0', () => {
+server.listen(port, () => {
     console.log(`Sea Battle Server running on port ${port}`);
 });
